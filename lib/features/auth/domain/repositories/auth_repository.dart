@@ -1,4 +1,3 @@
-// Ini adalah file baru
 import 'package:gainers/features/auth/domain/entities/user_entity.dart';
 
 abstract class AuthRepository {
