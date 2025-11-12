@@ -1,0 +1,10 @@
+// Ini adalah file baru
+import 'package:gainers/features/auth/domain/entities/user_entity.dart';
+
+abstract class AuthRepository {
+  Future<UserEntity> login(String email, String password);
+  Future<UserEntity> register(String email, String password, String username);
+  Future<void> logout();
+  Future<UserEntity?> getCurrentUser();
+  Future<void> resetPassword(String email);
+}
