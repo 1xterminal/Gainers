@@ -5,7 +5,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 // Impor tema dan layar placeholder Anda
 import 'core/theme/app_theme.dart';
-import 'features/auth/ui/auth_screen.dart';
+import 'features/auth/ui/auth_gate.dart';
 // import 'features/dashboard/ui/dashboard_screen.dart'; // Akan kita gunakan nanti
 
 Future<void> main() async {
@@ -51,7 +51,7 @@ class MyApp extends StatelessWidget {
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
       themeMode: ThemeMode.system, // Atau ganti ke .light / .dark
-      home: const AuthScreen(), // Mulai dari AuthScreen
+      home: const AuthGate(), // Mulai dari AuthScreen
       // Nanti kita akan ganti ini dengan logic auth:
       // home: SplashScreen() yang akan mengecek status auth
     );
