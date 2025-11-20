@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gainers/features/profile/providers/profile_provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:gainers/features/dashboard/ui/widgets/dashboard_card.dart';
 
 class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
@@ -51,7 +52,7 @@ class DashboardScreen extends ConsumerWidget {
             const SizedBox(height: 24),
 
             // --- ACTIVITY CARD (Steps) ---
-            _DashboardCard(
+            DashboardCard(
               onTap: () {
                 Navigator.push(
                   context,
@@ -125,7 +126,7 @@ class DashboardScreen extends ConsumerWidget {
               // Adjusted aspect ratio to prevent bottom overflow
               childAspectRatio: 1.3,
               children: [
-                _DashboardCard(
+                DashboardCard(
                   onTap: () {
                     Navigator.push(
                       context,
@@ -155,7 +156,7 @@ class DashboardScreen extends ConsumerWidget {
                     ],
                   ),
                 ),
-                _DashboardCard(
+                DashboardCard(
                   onTap: () {
                     Navigator.push(
                       context,
@@ -185,7 +186,7 @@ class DashboardScreen extends ConsumerWidget {
                     ],
                   ),
                 ),
-                _DashboardCard(
+                DashboardCard(
                   onTap: () {
                     Navigator.push(
                       context,
@@ -222,39 +223,6 @@ class DashboardScreen extends ConsumerWidget {
             // Add padding at bottom so the Navbar doesn't cover the last cards
             const SizedBox(height: 20),
           ],
-        ),
-      ),
-    );
-  }
-}
-
-class _DashboardCard extends StatelessWidget {
-  final Widget child;
-  final VoidCallback? onTap;
-
-  const _DashboardCard({required this.child, this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Theme.of(context).cardColor,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withAlpha((255 * 0.05).round()),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-        border: Border.all(color: Colors.grey.withAlpha((255 * 0.1).round())),
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(16),
-          child: Padding(padding: const EdgeInsets.all(16), child: child),
         ),
       ),
     );
