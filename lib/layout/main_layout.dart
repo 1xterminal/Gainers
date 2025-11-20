@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gainers/features/dashboard/ui/dashboard_screen.dart';
 import 'package:gainers/features/profile/ui/profile_screen.dart';
+import 'package:gainers/features/nutrition/ui/nutrition_screen.dart';
 
 class MainLayout extends ConsumerStatefulWidget {
   const MainLayout({super.key});
@@ -14,11 +15,9 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
   int _selectedIndex = 0;
 
   // The list of your 4 main tabs
-  // We use the DashboardScreen we cleaned up, and placeholders for the rest
-  // The list of your 4 main tabs
   final List<Widget> _pages = [
     const DashboardScreen(),
-    const Center(child: Text("Fitness - Coming Soon")),
+    const NutritionScreen(), // Replaced Fitness placeholder
     const Center(child: Text("Progress - Coming Soon")),
     const ProfileScreen(),
   ];
@@ -53,9 +52,9 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
             label: 'Home',
           ),
           NavigationDestination(
-            icon: Icon(Icons.fitness_center_outlined),
-            selectedIcon: Icon(Icons.fitness_center),
-            label: 'Fitness',
+            icon: Icon(Icons.restaurant_menu), // Changed icon
+            selectedIcon: Icon(Icons.restaurant),
+            label: 'Nutrition', // Changed label
           ),
           NavigationDestination(
             icon: Icon(Icons.bar_chart_outlined),
