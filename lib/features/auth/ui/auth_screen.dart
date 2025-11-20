@@ -72,7 +72,9 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
       ..hideCurrentSnackBar()
       ..showSnackBar(
         SnackBar(
-          content: Text(_isLogin ? 'Login successful!' : 'Registration successful!'),
+          content: Text(
+            _isLogin ? 'Login successful!' : 'Registration successful!',
+          ),
           backgroundColor: Colors.green,
         ),
       );
@@ -114,7 +116,9 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                         try {
                           await ref
                               .read(authNotifierProvider.notifier)
-                              .resetPasswordRequest(emailController.text.trim());
+                              .resetPasswordRequest(
+                                emailController.text.trim(),
+                              );
 
                           // 👇 check both contexts before using
                           if (!mounted || !dialogContext.mounted) return;
@@ -187,12 +191,15 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
             ),
           );
 
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(
-            builder: (context) =>
-                _isLogin ? const DashboardScreen() : const ProfileSetupScreen(),
-          ),
-        );
+        if (next.value?.isProfileComplete == true) {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (context) => const DashboardScreen()),
+          );
+        } else {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (context) => const ProfileSetupScreen()),
+          );
+        }
       }
     });
 
@@ -273,12 +280,34 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                     Align(
                       alignment: Alignment.centerRight,
                       child: TextButton(
-                        onPressed:
-                            authState.isLoading ? null : _showForgotPasswordDialog,
+                        onPressed: authState.isLoading
+                            ? null
+                            : _showForgotPasswordDialog,
                         child: const Text('Forgot Password?'),
                       ),
                     ),
                   const SizedBox(height: 24),
+                  OutlinedButton.icon(
+                    onPressed: authState.isLoading
+                        ? null
+                        : () {
+                            ref
+                                .read(authNotifierProvider.notifier)
+                                .signInWithGoogle();
+                          },
+                    icon: Image.network(
+                      'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Google_%22G%22_logo.svg/1200px-Google_%22G%22_logo.svg.png',
+                      height: 24,
+                      width: 24,
+                      errorBuilder: (context, error, stackTrace) =>
+                          const Icon(Icons.login),
+                    ),
+                    label: const Text('Sign in with Google'),
+                    style: OutlinedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
                   ElevatedButton(
                     onPressed: authState.isLoading ? null : _handleSubmit,
                     style: ElevatedButton.styleFrom(
@@ -290,8 +319,9 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                             width: 20,
                             child: CircularProgressIndicator(
                               strokeWidth: 2,
-                              valueColor:
-                                  AlwaysStoppedAnimation<Color>(Colors.white),
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                Colors.white,
+                              ),
                             ),
                           )
                         : Text(
