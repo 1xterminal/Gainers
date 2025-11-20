@@ -39,8 +39,8 @@ class NutritionScreen extends ConsumerWidget {
         ),
         floatingActionButton: FloatingActionButton(
           onPressed: () => _showAddDialog(context, ref),
-          child: const Icon(Icons.add),
           tooltip: 'Add Food',
+          child: const Icon(Icons.add),
         ),
       ),
     );
@@ -119,22 +119,27 @@ class NutritionScreen extends ConsumerWidget {
                     keyboardType: TextInputType.number,
                   ),
                   const SizedBox(height: 16),
-                  DropdownButtonFormField<String>(
-                    value: selectedMeal,
+                  InputDecorator(
                     decoration: const InputDecoration(labelText: 'Meal Type'),
-                    items: ['breakfast', 'lunch', 'dinner', 'snack'].map((
-                      String value,
-                    ) {
-                      return DropdownMenuItem<String>(
-                        value: value,
-                        child: Text(value.toUpperCase()),
-                      );
-                    }).toList(),
-                    onChanged: (val) {
-                      if (val != null) {
-                        setState(() => selectedMeal = val);
-                      }
-                    },
+                    child: DropdownButtonHideUnderline(
+                      child: DropdownButton<String>(
+                        value: selectedMeal,
+                        isDense: true,
+                        onChanged: (val) {
+                          if (val != null) {
+                            setState(() => selectedMeal = val);
+                          }
+                        },
+                        items: ['breakfast', 'lunch', 'dinner', 'snack'].map((
+                          String value,
+                        ) {
+                          return DropdownMenuItem<String>(
+                            value: value,
+                            child: Text(value.toUpperCase()),
+                          );
+                        }).toList(),
+                      ),
+                    ),
                   ),
                 ],
               ),

@@ -1,17 +1,39 @@
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'food_model.dart';
 
 class NutritionRepository {
-  // Simulasi penyimpanan sementara di memori HP
-  final List<FoodLog> _dummyStorage = [];
+  final SupabaseClient _client;
+
+  NutritionRepository(this._client);
 
   Future<void> addFoodLog(FoodLog log) async {
-    await Future.delayed(const Duration(milliseconds: 500)); // Pura-pura loading
-    _dummyStorage.add(log);
+    // Ensure the log has the correct user ID from the client if not already set (optional safeguard)
+    final userId = _client.auth.currentUser?.id;
+    if (userId == null) throw Exception('User not logged in');
+
+    // Create a map for insertion, ensuring user_id is correct
+    final data = log.toJson();
+    data['user_id'] = userId;
+
+    await _client.from('food_logs').insert(data);
   }
 
   Future<List<FoodLog>> getFoodLogs(DateTime date) async {
-    await Future.delayed(const Duration(milliseconds: 500));
-    // Nanti logika filter tanggal dari Supabase ditaruh di sini
-    return _dummyStorage;
+    final userId = _client.auth.currentUser?.id;
+    if (userId == null) return [];
+
+    // Filter by date (Start of day to End of day)
+    final startOfDay = DateTime(date.year, date.month, date.day);
+    final endOfDay = startOfDay.add(const Duration(days: 1));
+
+    final response = await _client
+        .from('food_logs')
+        .select()
+        .eq('user_id', userId)
+        .gte('created_at', startOfDay.toIso8601String())
+        .lt('created_at', endOfDay.toIso8601String())
+        .order('created_at', ascending: true);
+
+    return (response as List).map((e) => FoodLog.fromJson(e)).toList();
   }
 }

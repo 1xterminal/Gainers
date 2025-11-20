@@ -2,8 +2,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../data/food_model.dart';
 import '../data/nutrition_repository.dart';
 
+import 'package:supabase_flutter/supabase_flutter.dart';
+
 // 1. Provider Repository
-final nutritionRepositoryProvider = Provider((ref) => NutritionRepository());
+final nutritionRepositoryProvider = Provider((ref) {
+  return NutritionRepository(Supabase.instance.client);
+});
 
 // 2. Async Notifier (Pengelola Data List Makanan)
 class NutritionNotifier extends AsyncNotifier<List<FoodLog>> {
