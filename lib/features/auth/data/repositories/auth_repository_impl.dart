@@ -16,16 +16,13 @@ class AuthRepositoryImpl implements AuthRepository {
         email: email,
         password: password,
       );
-      
+
       final user = response.user;
       if (user == null) {
         throw const AuthFailure('Login failed: No user returned');
       }
-      
-      return UserModel(
-        id: user.id,
-        email: user.email ?? '',
-      );
+
+      return UserModel(id: user.id, email: user.email ?? '');
     } on AuthException catch (e) {
       throw AuthFailure(e.message);
     } catch (e) {
@@ -36,24 +33,26 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   // --- PENYESUAIAN ---
   // Menambahkan 'username'
-  Future<UserEntity> register(String email, String password, String username) async {
+  Future<UserEntity> register(
+    String email,
+    String password,
+    String username,
+  ) async {
     try {
       final response = await client.auth.signUp(
         email: email,
         password: password,
         // Ini adalah bagian penting untuk trigger 'handle_new_user' kita
         data: {'username': username},
+        emailRedirectTo: 'io.supabase.gainers://login-callback',
       );
-      
+
       final user = response.user;
       if (user == null) {
         throw const AuthFailure('Registration failed: No user returned');
       }
-      
-      return UserModel(
-        id: user.id,
-        email: user.email ?? '',
-      );
+
+      return UserModel(id: user.id, email: user.email ?? '');
     } on AuthException catch (e) {
       throw AuthFailure(e.message);
     } catch (e) {
@@ -77,11 +76,8 @@ class AuthRepositoryImpl implements AuthRepository {
     try {
       final user = client.auth.currentUser;
       if (user == null) return null;
-      
-      return UserModel(
-        id: user.id,
-        email: user.email ?? '',
-      );
+
+      return UserModel(id: user.id, email: user.email ?? '');
     } catch (e) {
       return null;
     }
@@ -90,7 +86,10 @@ class AuthRepositoryImpl implements AuthRepository {
   @override
   Future<void> resetPassword(String email) async {
     try {
-      await client.auth.resetPasswordForEmail(email);
+      await client.auth.resetPasswordForEmail(
+        email,
+        redirectTo: 'io.supabase.gainers://login-callback',
+      );
     } on AuthException catch (e) {
       throw AuthFailure(e.message);
     } catch (e) {
