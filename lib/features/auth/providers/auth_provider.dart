@@ -73,7 +73,7 @@ class AuthNotifier extends AsyncNotifier<AuthState> {
         username,
       );
       state = AsyncValue.data(
-        AuthState(user: user, isAuthenticated: true, isProfileComplete: false),
+        AuthState(user: user, isAuthenticated: false, isProfileComplete: false),
       );
     } catch (e, s) {
       state = AsyncValue.error(e, s);

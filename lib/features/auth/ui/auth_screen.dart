@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gainers/features/auth/providers/auth_provider.dart';
 import 'package:gainers/features/dashboard/ui/dashboard_screen.dart';
 import 'package:gainers/features/profile/ui/profile_setup_screen.dart';
+import 'package:gainers/features/auth/ui/email_confirmation_screen.dart';
 
 class AuthScreen extends ConsumerStatefulWidget {
   const AuthScreen({super.key});
@@ -65,6 +66,9 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
       );
     }
 
+    // Check if the operation resulted in an error
+    if (ref.read(authNotifierProvider).hasError) return;
+
     // 👇 safeguard before using context
     if (!mounted) return;
 
@@ -78,6 +82,17 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
           backgroundColor: Colors.green,
         ),
       );
+
+    // Manually navigate to EmailConfirmationScreen if registering
+    if (!_isLogin) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) =>
+              EmailConfirmationScreen(email: _emailController.text.trim()),
+        ),
+      );
+    }
   }
 
   Future<void> _showForgotPasswordDialog() async {
@@ -195,7 +210,9 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
           Navigator.of(context).pushReplacement(
             MaterialPageRoute(builder: (context) => const DashboardScreen()),
           );
-        } else {
+        } else if (_isLogin) {
+          // Only go to profile setup if logging in.
+          // If registering, _handleSubmit handles navigation to EmailConfirmationScreen
           Navigator.of(context).pushReplacement(
             MaterialPageRoute(builder: (context) => const ProfileSetupScreen()),
           );
