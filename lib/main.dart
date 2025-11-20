@@ -1,45 +1,25 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:gainers/features/auth/ui/auth_gate.dart'; // Import the Gatekeeper
 
-// Impor tema dan layar placeholder Anda
-import 'core/theme/app_theme.dart';
-import 'features/auth/ui/auth_gate.dart';
-// import 'features/dashboard/ui/dashboard_screen.dart'; // Akan kita gunakan nanti
-
-Future<void> main() async {
+void main() async {
+  // 1. Start the Engine
   WidgetsFlutterBinding.ensureInitialized();
 
-  // 1. Muat file .env
+  // Load env
   await dotenv.load(fileName: ".env");
 
-  // 2. Inisialisasi Supabase
-  // Ambil URL dan Key dari .env
-  final supabaseUrl = dotenv.env['SUPABASE_URL'];
-  final supabaseAnonKey = dotenv.env['SUPABASE_ANON_KEY'];
-
-  if (supabaseUrl == null || supabaseAnonKey == null) {
-    throw Exception('SUPABASE_URL or SUPABASE_ANON_KEY not found in .env file');
-  }
-
+  // 2. Connect to Supabase (Replace these with your actual keys!)
   await Supabase.initialize(
-    url: supabaseUrl,
-    anonKey: supabaseAnonKey,
+    url: dotenv.env['SUPABASE_URL'] ?? '',
+    anonKey: dotenv.env['SUPABASE_ANON_KEY'] ?? '',
   );
 
-  // 3. Jalankan aplikasi dengan Riverpod ProviderScope
-  runApp(
-    const ProviderScope(
-      child: MyApp(),
-    ),
-  );
+  // 3. Inject State Management (Riverpod) & Run App
+  runApp(const ProviderScope(child: MyApp()));
 }
-
-// Buat global provider untuk Supabase client (sesuai rencana Riverpod)
-final supabaseClientProvider = Provider<SupabaseClient>((ref) {
-  return Supabase.instance.client;
-});
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -47,13 +27,20 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Health & Fitness App',
-      theme: AppTheme.lightTheme,
-      darkTheme: AppTheme.darkTheme,
-      themeMode: ThemeMode.system, // Atau ganti ke .light / .dark
-      home: const AuthGate(), // Mulai dari AuthScreen
-      // Nanti kita akan ganti ini dengan logic auth:
-      // home: SplashScreen() yang akan mengecek status auth
+      title: 'Gainers',
+      debugShowCheckedModeBanner: false,
+
+      // Optional: Global Theme Setup
+      theme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
+        useMaterial3: true,
+        // You can define your global font, input decoration style, etc. here
+      ),
+
+      // 4. Point to the Gatekeeper
+      // We DO NOT point to MainLayout or Dashboard directly.
+      // We point to AuthGate, which decides where to go.
+      home: const AuthGate(),
     );
   }
 }
