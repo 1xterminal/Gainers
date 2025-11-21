@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gainers/features/dashboard/ui/dashboard_screen.dart';
 import 'package:gainers/features/profile/ui/profile_screen.dart';
 import 'package:gainers/features/nutrition/ui/nutrition_screen.dart';
+import 'package:gainers/features/activity/ui/activity_details_screen.dart';
 
 class MainLayout extends ConsumerStatefulWidget {
   const MainLayout({super.key});
@@ -20,6 +21,7 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
     const NutritionScreen(), // Replaced Fitness placeholder
     const Center(child: Text("Progress - Coming Soon")),
     const ProfileScreen(),
+    const ActivityDetailsScreen(),
   ];
 
   void _onItemTapped(int index) {
@@ -65,6 +67,11 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
             icon: Icon(Icons.person_outline),
             selectedIcon: Icon(Icons.person),
             label: 'Profile',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.nordic_walking),
+            selectedIcon: Icon(Icons.person),
+            label: 'Activity',
           ),
         ],
       ),
