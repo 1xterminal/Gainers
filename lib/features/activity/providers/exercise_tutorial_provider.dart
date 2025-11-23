@@ -14,7 +14,9 @@ final exerciseVideoProvider = FutureProvider.family<List<FitnessVideo>, String>(
 
     final api = ref.read(youtubeApiProvider);
 
-    final results = await api.search(query);
+    final searchString = '$query fitness tutorial';
+
+    final results = await api.search(searchString);
 
     return results.map((item) => FitnessVideo.fromApi(item)).toList();
   },

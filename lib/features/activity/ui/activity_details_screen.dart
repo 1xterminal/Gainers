@@ -1,92 +1,175 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:gainers/features/activity/data/models/step_data.dart';
+import 'package:gainers/features/activity/providers/activity_details_provider.dart';
 
-class StepData {
-  final DateTime date;
-  final int steps;
-
-  StepData(this.date, this.steps);
-}
-
-class ActivityDetailsScreen extends StatelessWidget {
+class ActivityDetailsScreen extends ConsumerWidget {
   const ActivityDetailsScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final List<StepData> lastSevenDays = List.generate(7, (index) {
-      DateTime date = DateTime.now().subtract(Duration(days: 6 - index));
-      int steps = [500, 6200, 8900, 3400, 49000, 7500, 5000][index];
-      return StepData(date, steps);
-    });
+  Widget build(BuildContext context, WidgetRef ref) {
+    final asyncHealthState = ref.watch(healthProvider);
 
-    final int totalSteps = lastSevenDays.fold(
-      0,
-      (sum, item) => sum + item.steps,
-    );
-    final double totalDistance = (totalSteps * 0.0003048);
+    return asyncHealthState.when(
+      loading: () =>
+          const Scaffold(body: Center(child: CircularProgressIndicator())),
 
-    return Scaffold(
-      appBar: AppBar(title: const Text('Activity Details')),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.only(top: 40, left: 13, right: 13),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Text(
-              'Last 7 Days',
-              style: TextStyle(
-                color: Colors.lightBlue.shade800,
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
+      error: (e, stack) {
+        final errorText = e.toString();
+        final isPermissionDenied = errorText.contains('Permanently Denied!');
+
+        return Scaffold(
+          appBar: AppBar(title: const Text('Activity Details')),
+          body: Center(
+            child: Padding(
+              padding: const EdgeInsets.all(10.0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.error_outline,
+                    size: 48,
+                    color: Colors.red.shade300,
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    isPermissionDenied
+                        ? 'Permission Required'
+                        : 'Could Not Load Activity Details',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(color: Colors.grey.shade600),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    e.toString().replaceAll('Exception:', ''),
+                    textAlign: TextAlign.center,
+                    style: TextStyle(color: Colors.grey.shade600),
+                  ),
+                  const SizedBox(height: 8),
+                  if (isPermissionDenied)
+                    ElevatedButton(
+                      onPressed: () => openAppSettings(),
+                      child: const Text('Open Settings'),
+                    ),
+                ],
               ),
             ),
-            const SizedBox(height: 24),
+          ),
+        );
+      },
 
-            Container(
-              height: 350,
-              padding: const EdgeInsets.only(right: 16, top: 10),
-              child: _buildBarChart(lastSevenDays),
-            ),
-            const SizedBox(height: 40),
+      data: (healthStats) {
+        final lastSevenDays = healthStats.weeklyData;
+        final stepsToday = healthStats.todaysSteps;
 
-            Text(
-              'Lifetime Stats',
-              style: TextStyle(
-                color: Colors.lightBlue.shade800,
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 16),
+        final int totalStepsSeven = lastSevenDays.fold(
+          0,
+          (sum, item) => sum + item.steps,
+        );
+        final double totalDistanceToday = stepsToday * 0.0003048;
+        final double totalDistanceSeven = totalStepsSeven * 0.0003048;
 
-            Row(
+        return Scaffold(
+          appBar: AppBar(title: const Text('Activity Details')),
+          body: SingleChildScrollView(
+            padding: const EdgeInsets.only(top: 40, left: 13, right: 13),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                _buildInfoCard(
-                  title: 'Total Steps',
-                  value: NumberFormat('#,###').format(totalSteps),
-                  icon: Icons.directions_run,
-                  color: Colors.blue,
+                Text(
+                  'Last 7 Days',
+                  style: TextStyle(
+                    color: Colors.lightBlue.shade800,
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
-                const SizedBox(width: 16),
-                _buildInfoCard(
-                  title: 'Total Distance (km)',
-                  value: NumberFormat('#,###').format(totalDistance),
-                  icon: Icons.arrow_circle_right_outlined,
-                  color: Colors.blue,
+                const SizedBox(height: 24),
+
+                Container(
+                  height: 290,
+                  padding: const EdgeInsets.only(right: 16, left: 16, top: 10),
+                  child: _buildBarChart(lastSevenDays),
                 ),
+                const SizedBox(height: 40),
+
+                Text(
+                  'Today\'s Stats',
+                  style: TextStyle(
+                    color: Colors.lightBlue.shade800,
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 16),
+
+                Row(
+                  children: [
+                    _buildInfoCard(
+                      title: 'Total Steps',
+                      value: NumberFormat('#,###').format(stepsToday),
+                      icon: Icons.directions_run,
+                      color: Colors.lightBlue.shade800,
+                    ),
+                    const SizedBox(width: 16),
+                    _buildInfoCard(
+                      title: 'Total Distance (km)',
+                      value: NumberFormat('#,###').format(totalDistanceToday),
+                      icon: Icons.arrow_circle_right_outlined,
+                      color: Colors.lightBlue.shade800,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 40),
+
+                Text(
+                  'Lifetime Stats',
+                  style: TextStyle(
+                    color: Colors.lightBlue.shade800,
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 16),
+
+                Row(
+                  children: [
+                    _buildInfoCard(
+                      title: 'Total Steps',
+                      value: NumberFormat('#,###').format(totalStepsSeven),
+                      icon: Icons.directions_run,
+                      color: Colors.lightBlue.shade800,
+                    ),
+                    const SizedBox(width: 16),
+                    _buildInfoCard(
+                      title: 'Total Distance (km)',
+                      value: NumberFormat('#,###').format(totalDistanceSeven),
+                      icon: Icons.arrow_circle_right_outlined,
+                      color: Colors.lightBlue.shade800,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
               ],
             ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 
   Widget _buildBarChart(List<StepData> data) {
+    double maxSteps = 0;
+    for (var i in data) {
+      if (i.steps > maxSteps) maxSteps = i.steps.toDouble();
+    }
+
     return BarChart(
       BarChartData(
-        alignment: BarChartAlignment.spaceAround,
+        alignment: BarChartAlignment.center,
         maxY: 12000,
 
         barTouchData: BarTouchData(
@@ -95,7 +178,7 @@ class ActivityDetailsScreen extends StatelessWidget {
           touchTooltipData: BarTouchTooltipData(
             fitInsideVertically: true,
             getTooltipColor: (group) =>
-                Colors.deepOrange.shade300.withValues(alpha: 25),
+                Colors.deepOrange.shade300.withValues(alpha: 0.5),
             getTooltipItem: (group, groupIndex, rod, rodIndex) {
               return BarTooltipItem(
                 '${rod.toY.round()}\nSteps', // Text content
@@ -185,10 +268,10 @@ class ActivityDetailsScreen extends StatelessWidget {
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(5),
+          borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
-              color: Colors.blueGrey,
+              color: Colors.blueGrey.withValues(alpha: 0.2),
               offset: const Offset(0, 2),
               blurRadius: 5,
             ),
@@ -201,10 +284,10 @@ class ActivityDetailsScreen extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.1),
+                color: color.withValues(alpha: 1),
                 shape: BoxShape.circle,
               ),
-              child: Icon(icon, color: color, size: 24),
+              child: Icon(icon, color: Colors.white, size: 24),
             ),
             const SizedBox(height: 12),
             Text(
