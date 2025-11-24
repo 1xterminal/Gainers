@@ -54,6 +54,12 @@ class ActivityDetailsScreen extends ConsumerWidget {
                       onPressed: () => openAppSettings(),
                       child: const Text('Open Settings'),
                     ),
+                  const SizedBox(height: 16),
+                  ElevatedButton.icon(
+                    onPressed: () => ref.refresh(healthProvider),
+                    icon: const Icon(Icons.refresh),
+                    label: const Text('Retry'),
+                  ),
                 ],
               ),
             ),
@@ -73,9 +79,23 @@ class ActivityDetailsScreen extends ConsumerWidget {
         final double totalDistanceSeven = totalStepsSeven * 0.0003048;
 
         return Scaffold(
-          appBar: AppBar(title: const Text('Activity Details')),
+          appBar: AppBar(
+            title: const Text('Activity Details'),
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.refresh),
+                onPressed: () => ref.refresh(healthProvider),
+                tooltip: 'Refresh Data',
+              ),
+            ],
+          ),
           body: SingleChildScrollView(
-            padding: const EdgeInsets.only(top: 40, left: 13, right: 13),
+            padding: const EdgeInsets.only(
+              top: 40,
+              left: 13,
+              right: 13,
+              bottom: 40,
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
@@ -177,13 +197,12 @@ class ActivityDetailsScreen extends ConsumerWidget {
           touchExtraThreshold: const EdgeInsets.symmetric(horizontal: 8),
           touchTooltipData: BarTouchTooltipData(
             fitInsideVertically: true,
-            getTooltipColor: (group) =>
-                Colors.deepOrange.shade300.withValues(alpha: 0.5),
+            getTooltipColor: (group) => Colors.orange.shade400,
             getTooltipItem: (group, groupIndex, rod, rodIndex) {
               return BarTooltipItem(
-                '${rod.toY.round()}\nSteps', // Text content
+                '${rod.toY.round()}\nSteps',
                 const TextStyle(
-                  color: Colors.white, // White text
+                  color: Colors.white,
                   fontWeight: FontWeight.bold,
                   fontSize: 14,
                 ),
