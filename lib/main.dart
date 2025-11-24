@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:gainers/features/auth/ui/auth_gate.dart'; // Import the Gatekeeper
+import 'package:gainers/core/theme/app_theme.dart';
 
 void main() async {
   // 1. Start the Engine
@@ -30,13 +31,10 @@ class MyApp extends StatelessWidget {
       title: 'Gainers',
       debugShowCheckedModeBanner: false,
 
-      // Optional: Global Theme Setup
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
-        useMaterial3: true,
-        // You can define your global font, input decoration style, etc. here
-      ),
-
+      // Use the themes defined in AppTheme
+      theme: AppTheme.lightTheme,
+      darkTheme: AppTheme.darkTheme,
+      themeMode: ThemeMode.system, // Follow system setting
       // 4. Point to the Gatekeeper
       // We DO NOT point to MainLayout or Dashboard directly.
       // We point to AuthGate, which decides where to go.
