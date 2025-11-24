@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:gainers/features/activity/data/models/step_data.dart';
 import 'package:gainers/features/activity/providers/activity_details_provider.dart';
+import 'package:gainers/core/theme/app_theme.dart';
 
 class ActivityDetailsScreen extends ConsumerWidget {
   const ActivityDetailsScreen({super.key});
@@ -12,6 +13,8 @@ class ActivityDetailsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final asyncHealthState = ref.watch(healthProvider);
+
+    final barTheme = Theme.of(context).extension<BarChartTheme>()!;
 
     return asyncHealthState.when(
       loading: () =>
@@ -101,8 +104,7 @@ class ActivityDetailsScreen extends ConsumerWidget {
               children: [
                 Text(
                   'Last 7 Days',
-                  style: TextStyle(
-                    color: Colors.lightBlue.shade800,
+                  style: barTheme.labelStyle.copyWith(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
                   ),
@@ -112,14 +114,13 @@ class ActivityDetailsScreen extends ConsumerWidget {
                 Container(
                   height: 290,
                   padding: const EdgeInsets.only(right: 16, left: 16, top: 10),
-                  child: _buildBarChart(lastSevenDays),
+                  child: _buildBarChart(lastSevenDays, barTheme),
                 ),
                 const SizedBox(height: 40),
 
                 Text(
                   'Today\'s Stats',
-                  style: TextStyle(
-                    color: Colors.lightBlue.shade800,
+                  style: barTheme.labelStyle.copyWith(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
                   ),
@@ -132,14 +133,18 @@ class ActivityDetailsScreen extends ConsumerWidget {
                       title: 'Total Steps',
                       value: NumberFormat('#,###').format(stepsToday),
                       icon: Icons.directions_run,
-                      color: Colors.lightBlue.shade800,
+                      iconColor: barTheme.barColor,
+                      cardColor: barTheme.gridColor,
+                      textColor: barTheme.labelStyle.color!,
                     ),
                     const SizedBox(width: 16),
                     _buildInfoCard(
                       title: 'Total Distance (km)',
                       value: NumberFormat('#,###').format(totalDistanceToday),
                       icon: Icons.arrow_circle_right_outlined,
-                      color: Colors.lightBlue.shade800,
+                      iconColor: barTheme.barColor,
+                      cardColor: barTheme.gridColor,
+                      textColor: barTheme.labelStyle.color!,
                     ),
                   ],
                 ),
@@ -147,8 +152,7 @@ class ActivityDetailsScreen extends ConsumerWidget {
 
                 Text(
                   'Lifetime Stats',
-                  style: TextStyle(
-                    color: Colors.lightBlue.shade800,
+                  style: barTheme.labelStyle.copyWith(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
                   ),
@@ -161,14 +165,18 @@ class ActivityDetailsScreen extends ConsumerWidget {
                       title: 'Total Steps',
                       value: NumberFormat('#,###').format(totalStepsSeven),
                       icon: Icons.directions_run,
-                      color: Colors.lightBlue.shade800,
+                      iconColor: barTheme.barColor,
+                      cardColor: barTheme.gridColor,
+                      textColor: barTheme.labelStyle.color!,
                     ),
                     const SizedBox(width: 16),
                     _buildInfoCard(
                       title: 'Total Distance (km)',
                       value: NumberFormat('#,###').format(totalDistanceSeven),
                       icon: Icons.arrow_circle_right_outlined,
-                      color: Colors.lightBlue.shade800,
+                      iconColor: barTheme.barColor,
+                      cardColor: barTheme.gridColor,
+                      textColor: barTheme.labelStyle.color!,
                     ),
                   ],
                 ),
@@ -181,7 +189,7 @@ class ActivityDetailsScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildBarChart(List<StepData> data) {
+  Widget _buildBarChart(List<StepData> data, BarChartTheme barTheme) {
     double maxSteps = 0;
     for (var i in data) {
       if (i.steps > maxSteps) maxSteps = i.steps.toDouble();
@@ -197,7 +205,7 @@ class ActivityDetailsScreen extends ConsumerWidget {
           touchExtraThreshold: const EdgeInsets.symmetric(horizontal: 8),
           touchTooltipData: BarTouchTooltipData(
             fitInsideVertically: true,
-            getTooltipColor: (group) => Colors.orange.shade400,
+            getTooltipColor: (group) => barTheme.toolTipColor,
             getTooltipItem: (group, groupIndex, rod, rodIndex) {
               return BarTooltipItem(
                 '${rod.toY.round()}\nSteps',
@@ -234,7 +242,7 @@ class ActivityDetailsScreen extends ConsumerWidget {
                     padding: const EdgeInsets.only(top: 8.0),
                     child: Text(
                       DateFormat.E().format(date),
-                      style: const TextStyle(fontSize: 12),
+                      style: barTheme.labelStyle,
                     ),
                   );
                 }
@@ -260,13 +268,13 @@ class ActivityDetailsScreen extends ConsumerWidget {
             barRods: [
               BarChartRodData(
                 toY: visualHeight,
-                color: Colors.blue,
+                color: barTheme.barColor,
                 width: 20,
                 borderRadius: BorderRadius.circular(5),
                 backDrawRodData: BackgroundBarChartRodData(
                   show: true,
                   toY: 12000,
-                  color: Colors.lightBlue.shade100,
+                  color: barTheme.barBackgroundColor,
                 ),
               ),
             ],
@@ -280,13 +288,15 @@ class ActivityDetailsScreen extends ConsumerWidget {
     required String title,
     required String value,
     required IconData icon,
-    required Color color,
+    required Color iconColor,
+    required Color cardColor,
+    required Color textColor,
   }) {
     return Expanded(
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: cardColor,
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
@@ -303,7 +313,7 @@ class ActivityDetailsScreen extends ConsumerWidget {
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: color.withValues(alpha: 1),
+                color: iconColor.withValues(alpha: 1),
                 shape: BoxShape.circle,
               ),
               child: Icon(icon, color: Colors.white, size: 24),
@@ -311,13 +321,14 @@ class ActivityDetailsScreen extends ConsumerWidget {
             const SizedBox(height: 12),
             Text(
               value,
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: textColor,
+              ),
             ),
             const SizedBox(height: 4),
-            Text(
-              title,
-              style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
-            ),
+            Text(title, style: TextStyle(color: textColor, fontSize: 14)),
           ],
         ),
       ),
