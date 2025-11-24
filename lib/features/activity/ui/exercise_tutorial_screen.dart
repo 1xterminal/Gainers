@@ -67,10 +67,10 @@ class _ExerciseTutorialScreenState
                 Container(
                   decoration: BoxDecoration(
                     color: Colors.white,
-                    borderRadius: BorderRadius.circular(5),
-                    boxShadow: const [
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
                       BoxShadow(
-                        color: Colors.blueGrey,
+                        color: Colors.blueGrey.withValues(alpha: 0.2),
                         offset: Offset(0, 2),
                         blurRadius: 5,
                       ),
@@ -128,7 +128,8 @@ class _ExerciseTutorialScreenState
                 );
               },
               loading: () => const Center(child: CircularProgressIndicator()),
-              error: (error, stack) => Center(child: Text('Error: $error')),
+              error: (error, stack) =>
+                  Center(child: Text('No Such Video Exists.')),
             ),
           ),
         ],
@@ -142,9 +143,9 @@ class _ExerciseTutorialScreenState
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(5),
-        boxShadow: const [
+        boxShadow: [
           BoxShadow(
-            color: Colors.blueGrey,
+            color: Colors.blueGrey.withValues(alpha: 0.2),
             offset: Offset(0, 2),
             blurRadius: 5,
           ),
@@ -183,10 +184,10 @@ class _ExerciseTutorialScreenState
                     video.title,
                     textAlign: TextAlign.center,
                     maxLines: 2,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
-                      color: Colors.black87,
+                      color: Colors.lightBlue.shade800,
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
@@ -196,7 +197,10 @@ class _ExerciseTutorialScreenState
                   Text(
                     video.channelName,
                     textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.lightBlue.shade600,
+                    ),
                   ),
                 ],
               ),
