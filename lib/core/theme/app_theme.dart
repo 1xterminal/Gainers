@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'bar_chart_theme.dart';
+
+export 'bar_chart_theme.dart';
 
 class AppTheme {
   static final ThemeData lightTheme = ThemeData(
@@ -29,6 +32,16 @@ class AppTheme {
         borderSide: BorderSide(color: Colors.black12),
       ),
     ),
+
+    extensions: <ThemeExtension<dynamic>>[
+      BarChartTheme(
+        barColor: Colors.blue,
+        barBackgroundColor: Colors.lightBlue.shade100,
+        gridColor: Colors.white,
+        toolTipColor: Colors.orange.shade400,
+        labelStyle: TextStyle(color: Colors.lightBlue.shade800, fontSize: 12),
+      ),
+    ],
   );
 
   static final ThemeData darkTheme = ThemeData(
@@ -55,5 +68,15 @@ class AppTheme {
         borderSide: BorderSide(color: Colors.grey),
       ),
     ),
+
+    extensions: <ThemeExtension<dynamic>>[
+      BarChartTheme(
+        barColor: Colors.greenAccent.shade200,
+        barBackgroundColor: Colors.deepPurple,
+        gridColor: Colors.grey.shade800,
+        toolTipColor: Colors.pink.shade400,
+        labelStyle: TextStyle(color: Colors.greenAccent, fontSize: 12),
+      ),
+    ],
   );
 }

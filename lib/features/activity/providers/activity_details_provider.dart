@@ -32,23 +32,15 @@ class HealthNotifier extends AsyncNotifier<HealthState> {
     var permissions = [HealthDataAccess.READ];
 
     try {
-      print("Checking if permissions are already granted...");
       bool? hasPermissions = await _health.hasPermissions(
         types,
         permissions: permissions,
       );
-      print("Has Permissions: $hasPermissions");
 
       if (hasPermissions != true) {
-        print("Requesting Health Connect Authorization...");
-        bool requested = await _health.requestAuthorization(
-          types,
-          permissions: permissions,
-        );
-        print("Health Connect Authorization Granted: $requested");
+        await _health.requestAuthorization(types, permissions: permissions);
       }
     } catch (e) {
-      print("Error requesting authorization: $e");
       throw Exception('Failed to connect to Health Connect: $e');
     }
 
@@ -81,8 +73,7 @@ class HealthNotifier extends AsyncNotifier<HealthState> {
         }
 
         weekSteps.add(StepData(date, steps ?? 0));
-      } catch (e) {
-        print("Error fetching steps for ${date.toString().split(' ')[0]}: $e");
+      } catch (_) {
         weekSteps.add(StepData(date, 0));
       }
     }

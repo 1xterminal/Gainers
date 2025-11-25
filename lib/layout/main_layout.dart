@@ -72,12 +72,12 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
           ),
           NavigationDestination(
             icon: Icon(Icons.nordic_walking),
-            selectedIcon: Icon(Icons.person),
+            selectedIcon: Icon(Icons.nordic_walking),
             label: 'Activity',
           ),
           NavigationDestination(
             icon: Icon(Icons.ondemand_video),
-            selectedIcon: Icon(Icons.person),
+            selectedIcon: Icon(Icons.ondemand_video),
             label: 'Tutorials',
           ),
         ],
