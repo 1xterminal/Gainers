@@ -73,7 +73,7 @@ class AppTheme {
       BarChartTheme(
         barColor: Colors.greenAccent.shade200,
         barBackgroundColor: Colors.deepPurple,
-        gridColor: Colors.grey.shade800,
+        gridColor: Colors.grey.shade900,
         toolTipColor: Colors.pink.shade400,
         labelStyle: TextStyle(color: Colors.greenAccent, fontSize: 12),
       ),

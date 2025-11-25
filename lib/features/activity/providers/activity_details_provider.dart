@@ -20,9 +20,7 @@ class HealthNotifier extends AsyncNotifier<HealthState> {
   }
 
   Future<HealthState> _fetchHealthData() async {
-    print("Requesting Activity Recognition Permission...");
     var activityStatus = await Permission.activityRecognition.request();
-    print("Activity Recognition Status: $activityStatus");
 
     if (activityStatus.isPermanentlyDenied) {
       throw Exception('Activity Permission Is Permanently Denied!');
@@ -47,29 +45,20 @@ class HealthNotifier extends AsyncNotifier<HealthState> {
     List<StepData> weekSteps = [];
     DateTime now = DateTime.now();
 
-    print("Fetching steps for the last 7 days...");
     for (int i = 0; i < 7; i++) {
       DateTime date = now.subtract(Duration(days: i));
       DateTime startTime = DateTime(date.year, date.month, date.day, 0, 0, 0);
       DateTime endTime = DateTime(date.year, date.month, date.day, 23, 59, 59);
 
       try {
-        print("Fetching total steps for ${date.toString().split(' ')[0]}...");
         int? steps = await _health.getTotalStepsInInterval(startTime, endTime);
-        print("Total Steps: $steps");
 
         if (steps == null || steps == 0) {
-          print("Attempting to fetch raw data points for debugging...");
-          List<HealthDataPoint> rawData = await _health.getHealthDataFromTypes(
+          await _health.getHealthDataFromTypes(
             startTime: startTime,
             endTime: endTime,
             types: types,
           );
-          print("Found ${rawData.length} raw data points.");
-          for (var p in rawData) {
-            print("Data Point: ${p.value} at ${p.dateFrom}");
-          }
-          // Optional: manually sum up if needed, but getTotalStepsInInterval should work.
         }
 
         weekSteps.add(StepData(date, steps ?? 0));
