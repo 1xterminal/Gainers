@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:gainers/features/activity/data/models/fitness_video_model.dart';
 import 'package:gainers/features/activity/providers/exercise_tutorial_provider.dart';
+import 'package:gainers/core/theme/app_theme.dart';
 
 class ExerciseTutorialScreen extends ConsumerStatefulWidget {
   const ExerciseTutorialScreen({super.key});
@@ -18,6 +19,7 @@ class _ExerciseTutorialScreenState
 
   String _currentQuery = '';
 
+  //perform search
   void _performSearch() {
     if (_searchController.text.isNotEmpty) {
       setState(() {
@@ -26,6 +28,7 @@ class _ExerciseTutorialScreenState
     }
   }
 
+  //opens video url in external application
   Future<void> _launchVideo(String? url) async {
     if (url == null) return;
     final uri = Uri.parse(url);
@@ -48,12 +51,16 @@ class _ExerciseTutorialScreenState
 
   @override
   Widget build(BuildContext context) {
+    //watch the provider with the current query
     final asyncVideos = ref.watch(exerciseVideoProvider(_currentQuery));
+
+    final barTheme = Theme.of(context).extension<BarChartTheme>()!;
 
     return Scaffold(
       appBar: AppBar(title: const Text('Fitness & Tutorials')),
       body: Column(
         children: [
+          // -- search bar --
           Padding(
             padding: const EdgeInsets.only(
               top: 20,
@@ -66,11 +73,11 @@ class _ExerciseTutorialScreenState
               children: [
                 Container(
                   decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(5),
-                    boxShadow: const [
+                    color: barTheme.gridColor,
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
                       BoxShadow(
-                        color: Colors.blueGrey,
+                        color: Colors.blueGrey.withValues(alpha: 0.2),
                         offset: Offset(0, 2),
                         blurRadius: 5,
                       ),
@@ -80,19 +87,18 @@ class _ExerciseTutorialScreenState
                     controller: _searchController,
                     decoration: InputDecoration(
                       hintText: 'Search for exercises',
-                      hintStyle: TextStyle(color: Colors.grey.shade600),
-                      prefixIcon: Icon(
-                        Icons.search,
-                        color: Colors.lightBlue.shade800,
-                      ),
+                      hintStyle: barTheme.labelStyle.copyWith(),
+                      prefixIcon: Icon(Icons.search, color: barTheme.barColor),
                       suffixIcon: IconButton(
                         icon: Icon(
                           Icons.arrow_forward,
-                          color: Colors.lightBlue.shade800,
+                          color: barTheme.barColor,
                         ),
                         onPressed: _performSearch,
                       ),
                       border: InputBorder.none,
+                      enabledBorder: InputBorder.none,
+                      focusedBorder: InputBorder.none,
                       contentPadding: const EdgeInsets.symmetric(vertical: 15),
                     ),
                     onSubmitted: (_) => _performSearch(),
@@ -104,6 +110,7 @@ class _ExerciseTutorialScreenState
             ),
           ),
 
+          // -- video list --
           Expanded(
             child: asyncVideos.when(
               data: (videos) {
@@ -111,7 +118,7 @@ class _ExerciseTutorialScreenState
                   return Center(
                     child: Text(
                       'Search to find videos',
-                      style: TextStyle(color: Colors.grey.shade600),
+                      style: barTheme.labelStyle.copyWith(),
                     ),
                   );
                 }
@@ -123,12 +130,13 @@ class _ExerciseTutorialScreenState
                   itemCount: videos.length,
                   itemBuilder: (context, index) {
                     final video = videos[index];
-                    return _buildVideoCard(video);
+                    return _buildVideoCard(video, barTheme);
                   },
                 );
               },
               loading: () => const Center(child: CircularProgressIndicator()),
-              error: (error, stack) => Center(child: Text('Error: $error')),
+              error: (error, stack) =>
+                  Center(child: Text('No Such Video Exists.')),
             ),
           ),
         ],
@@ -136,15 +144,16 @@ class _ExerciseTutorialScreenState
     );
   }
 
-  Widget _buildVideoCard(FitnessVideo video) {
+  //helper function to build the video card
+  Widget _buildVideoCard(FitnessVideo video, BarChartTheme barTheme) {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: barTheme.gridColor,
         borderRadius: BorderRadius.circular(5),
-        boxShadow: const [
+        boxShadow: [
           BoxShadow(
-            color: Colors.blueGrey,
+            color: Colors.blueGrey.withValues(alpha: 0.2),
             offset: Offset(0, 2),
             blurRadius: 5,
           ),
@@ -167,8 +176,8 @@ class _ExerciseTutorialScreenState
                     video.thumbnail,
                     fit: BoxFit.cover,
                     errorBuilder: (_, __, ___) => Container(
-                      color: Colors.grey.shade200,
-                      child: const Icon(Icons.broken_image, color: Colors.grey),
+                      color: barTheme.gridColor,
+                      child: Icon(Icons.broken_image, color: barTheme.barColor),
                     ),
                   ),
                 ),
@@ -183,10 +192,10 @@ class _ExerciseTutorialScreenState
                     video.title,
                     textAlign: TextAlign.center,
                     maxLines: 2,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
-                      color: Colors.black87,
+                      color: barTheme.barColor,
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
@@ -196,7 +205,7 @@ class _ExerciseTutorialScreenState
                   Text(
                     video.channelName,
                     textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
+                    style: TextStyle(fontSize: 14, color: barTheme.barColor),
                   ),
                 ],
               ),
