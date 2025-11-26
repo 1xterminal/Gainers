@@ -36,4 +36,8 @@ class NutritionRepository {
 
     return (response as List).map((e) => FoodLog.fromJson(e)).toList();
   }
+
+  Future<void> deleteFoodLog(int id) async {
+    await _client.from('food_logs').delete().eq('id', id);
+  }
 }
