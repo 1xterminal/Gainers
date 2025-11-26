@@ -58,7 +58,7 @@ class DashboardScreen extends ConsumerWidget {
               Padding(
                 padding: const EdgeInsets.only(right: 16.0),
                 child: CircleAvatar(
-                  backgroundColor: theme.primaryColor.withOpacity(0.1),
+                  backgroundColor: theme.primaryColor.withValues(alpha: 0.1),
                   child: IconButton(
                     icon: Icon(
                       Icons.notifications_none,
@@ -100,7 +100,7 @@ class DashboardScreen extends ConsumerWidget {
                           Container(
                             padding: const EdgeInsets.all(8),
                             decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.2),
+                              color: Colors.white.withValues(alpha: 0.2),
                               shape: BoxShape.circle,
                             ),
                             child: const Icon(
@@ -123,8 +123,8 @@ class DashboardScreen extends ConsumerWidget {
                                   child: CircularProgressIndicator(
                                     value: 0.65,
                                     strokeWidth: 10,
-                                    backgroundColor: Colors.white.withOpacity(
-                                      0.2,
+                                    backgroundColor: Colors.white.withValues(
+                                      alpha: 0.2,
                                     ),
                                     valueColor:
                                         const AlwaysStoppedAnimation<Color>(
@@ -222,7 +222,7 @@ class DashboardScreen extends ConsumerWidget {
                           Container(
                             padding: const EdgeInsets.all(10),
                             decoration: BoxDecoration(
-                              color: Colors.orange.withOpacity(0.1),
+                              color: Colors.orange.withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: const Icon(
@@ -266,7 +266,7 @@ class DashboardScreen extends ConsumerWidget {
                           Container(
                             padding: const EdgeInsets.all(10),
                             decoration: BoxDecoration(
-                              color: Colors.blue.withOpacity(0.1),
+                              color: Colors.blue.withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: const Icon(
@@ -310,7 +310,7 @@ class DashboardScreen extends ConsumerWidget {
                           Container(
                             padding: const EdgeInsets.all(10),
                             decoration: BoxDecoration(
-                              color: Colors.purple.withOpacity(0.1),
+                              color: Colors.purple.withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: const Icon(
@@ -343,7 +343,7 @@ class DashboardScreen extends ConsumerWidget {
                           Container(
                             padding: const EdgeInsets.all(10),
                             decoration: BoxDecoration(
-                              color: Colors.teal.withOpacity(0.1),
+                              color: Colors.teal.withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: const Icon(
