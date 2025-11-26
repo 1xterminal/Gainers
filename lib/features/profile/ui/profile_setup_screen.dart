@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-// REMOVED: import 'package:gainers/features/auth/providers/auth_provider.dart'; 
 import 'package:gainers/features/dashboard/ui/dashboard_screen.dart';
 import 'package:gainers/features/profile/domain/entities/profile.dart';
 import 'package:gainers/features/profile/providers/profile_provider.dart';
@@ -27,7 +26,7 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
   final List<String> _activityGoals = [
     'Lose Weight',
     'Maintain Weight',
-    'Gain Muscle'
+    'Gain Muscle',
   ];
 
   int _pageIndex = 0;
@@ -49,6 +48,16 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
       initialDate: DateTime(2000),
       firstDate: DateTime(1900),
       lastDate: DateTime.now(),
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: ColorScheme.light(
+              primary: Theme.of(context).primaryColor,
+            ),
+          ),
+          child: child!,
+        );
+      },
     );
     if (picked != null) {
       setState(() {
@@ -58,13 +67,12 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
   }
 
   Future<void> _handleSubmit() async {
-    // 1. Validate the current page (Goal selection)
     if (!_formKeys[_pageIndex].currentState!.validate()) {
       return;
     }
 
     final user = Supabase.instance.client.auth.currentUser;
-    
+
     if (user == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Error: No authenticated user found')),
@@ -76,18 +84,16 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
     final messenger = ScaffoldMessenger.of(context);
 
     try {
-      // 2. Create Profile
-      // NOTE: We retrieve 'username' from metadata so it doesn't get saved as NULL
       final username = user.userMetadata?['username'] as String?;
 
       final profile = Profile(
         id: user.id,
-        username: username, // Include this to preserve the username
+        username: username,
         displayName: _displayNameController.text,
         gender: _genderController.text,
-        dateOfBirth: DateTime.parse(_dobController.text), // Will crash if empty (fixed by disabling swipe)
-        heightCm: int.parse(_heightController.text),      // Will crash if empty (fixed by disabling swipe)
-        weightKg: double.parse(_weightController.text),   // Will crash if empty (fixed by disabling swipe)
+        dateOfBirth: DateTime.parse(_dobController.text),
+        heightCm: int.parse(_heightController.text),
+        weightKg: double.parse(_weightController.text),
         activityGoal: _selectedActivityGoal,
         unitPreference: 'metric',
       );
@@ -95,11 +101,9 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
       await ref.read(createProfileProvider)(profile);
 
       if (!mounted) return;
-      
+
       navigator.pushReplacement(
-        MaterialPageRoute(
-          builder: (context) => const DashboardScreen(),
-        ),
+        MaterialPageRoute(builder: (context) => const DashboardScreen()),
       );
     } catch (e) {
       if (!mounted) return;
@@ -111,155 +115,216 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final progress = (_pageIndex + 1) / 6;
+
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Setup Your Profile'),
-      ),
-      body: Column(
-        children: [
-          Expanded(
-            child: PageView(
-              // FIX: Disable swiping so users MUST use buttons and pass validation
-              physics: const NeverScrollableScrollPhysics(), 
-              controller: _pageController,
-              onPageChanged: (index) {
-                setState(() {
-                  _pageIndex = index;
-                });
-              },
-              children: [
-                _ProfilePage(
-                  title: "What's your name?",
-                  formKey: _formKeys[0],
-                  child: TextFormField(
-                    controller: _displayNameController,
-                    decoration:
-                        const InputDecoration(labelText: 'Display Name'),
-                    validator: (value) =>
-                        value!.isEmpty ? 'Please enter your display name' : null,
-                  ),
-                ),
-                _ProfilePage(
-                  title: 'What are you?',
-                  formKey: _formKeys[1],
-                  child: TextFormField(
-                    controller: _genderController,
-                    decoration: const InputDecoration(labelText: 'Gender'),
-                    validator: (value) =>
-                        value!.isEmpty ? 'Please enter your gender' : null,
-                  ),
-                ),
-                _ProfilePage(
-                  title: 'When were you born?',
-                  formKey: _formKeys[2],
-                  child: TextFormField(
-                    controller: _dobController,
-                    decoration: const InputDecoration(
-                      labelText: 'Date of Birth',
-                      suffixIcon: Icon(Icons.calendar_today),
-                    ),
-                    readOnly: true,
-                    onTap: _selectDate,
-                    validator: (value) => value!.isEmpty
-                        ? 'Please enter your date of birth'
-                        : null,
-                  ),
-                ),
-                _ProfilePage(
-                  title: 'How tall are you?',
-                  formKey: _formKeys[3],
-                  child: TextFormField(
-                    controller: _heightController,
-                    decoration: const InputDecoration(labelText: 'Height (cm)'),
-                    keyboardType: TextInputType.number,
-                    validator: (value) =>
-                        value!.isEmpty ? 'Please enter your height' : null,
-                  ),
-                ),
-                _ProfilePage(
-                  title: 'What is your current weight?',
-                  formKey: _formKeys[4],
-                  child: TextFormField(
-                    controller: _weightController,
-                    decoration: const InputDecoration(labelText: 'Weight (kg)'),
-                    keyboardType: TextInputType.number,
-                    validator: (value) =>
-                        value!.isEmpty ? 'Please enter your weight' : null,
-                  ),
-                ),
-                _ProfilePage(
-                  title: 'What is your primary goal?',
-                  formKey: _formKeys[5],
-                  child: DropdownButtonFormField<String>(
-                    initialValue: _selectedActivityGoal,
-                    items: _activityGoals
-                        .map((goal) =>
-                            DropdownMenuItem(value: goal, child: Text(goal)))
-                        .toList(),
-                    onChanged: (value) {
-                      setState(() {
-                        _selectedActivityGoal = value;
-                      });
-                    },
-                    decoration:
-                        const InputDecoration(labelText: 'Primary Goal'),
-                    validator: (value) =>
-                        value == null ? 'Please select a goal' : null,
-                  ),
-                ),
-              ],
-            ),
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [theme.scaffoldBackgroundColor, Colors.white],
           ),
-          _buildNavigation(),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildNavigation() {
-    final isLastPage = _pageIndex == 5;
-
-    return Padding(
-      padding: const EdgeInsets.all(24.0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          if (_pageIndex > 0)
-            TextButton.icon(
-              onPressed: () {
-                _pageController.previousPage(
-                  duration: const Duration(milliseconds: 300),
-                  curve: Curves.ease,
-                );
-              },
-              icon: const Icon(Icons.arrow_back),
-              label: const Text('Previous'),
-            )
-          else
-            const SizedBox(width: 80),
-          if (!isLastPage)
-            TextButton.icon(
-              onPressed: () {
-                if (_formKeys[_pageIndex].currentState!.validate()) {
-                  _pageController.nextPage(
-                    duration: const Duration(milliseconds: 300),
-                    curve: Curves.ease,
-                  );
-                }
-              },
-              label: const Text('Next'),
-              icon: const Icon(Icons.arrow_forward),
-            ),
-          if (isLastPage)
-            ElevatedButton(
-              onPressed: _handleSubmit,
-              style: ElevatedButton.styleFrom(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+        ),
+        child: SafeArea(
+          child: Column(
+            children: [
+              // --- Header with Progress ---
+              Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24.0,
+                  vertical: 16.0,
+                ),
+                child: Row(
+                  children: [
+                    if (_pageIndex > 0)
+                      IconButton(
+                        icon: const Icon(Icons.arrow_back_ios),
+                        onPressed: () {
+                          _pageController.previousPage(
+                            duration: const Duration(milliseconds: 300),
+                            curve: Curves.ease,
+                          );
+                        },
+                      )
+                    else
+                      const SizedBox(width: 48), // Spacer
+                    Expanded(
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(8),
+                        child: LinearProgressIndicator(
+                          value: progress,
+                          minHeight: 8,
+                          backgroundColor: Colors.grey[200],
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            theme.primaryColor,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Text(
+                      '${_pageIndex + 1}/6',
+                      style: theme.textTheme.labelLarge?.copyWith(
+                        color: Colors.grey[600],
+                      ),
+                    ),
+                  ],
+                ),
               ),
-              child: const Text('Start Journey'),
-            ),
-        ],
+
+              Expanded(
+                child: PageView(
+                  physics: const NeverScrollableScrollPhysics(),
+                  controller: _pageController,
+                  onPageChanged: (index) {
+                    setState(() {
+                      _pageIndex = index;
+                    });
+                  },
+                  children: [
+                    _ProfilePage(
+                      title: "What's your name?",
+                      subtitle: "Let us know what to call you.",
+                      formKey: _formKeys[0],
+                      child: TextFormField(
+                        controller: _displayNameController,
+                        decoration: const InputDecoration(
+                          labelText: 'Display Name',
+                          prefixIcon: Icon(Icons.person_outline),
+                        ),
+                        validator: (value) => value!.isEmpty
+                            ? 'Please enter your display name'
+                            : null,
+                      ),
+                    ),
+                    _ProfilePage(
+                      title: 'What is your gender?',
+                      subtitle: "This helps us calculate your metabolic rate.",
+                      formKey: _formKeys[1],
+                      child: TextFormField(
+                        controller: _genderController,
+                        decoration: const InputDecoration(
+                          labelText: 'Gender',
+                          prefixIcon: Icon(Icons.wc),
+                        ),
+                        validator: (value) =>
+                            value!.isEmpty ? 'Please enter your gender' : null,
+                      ),
+                    ),
+                    _ProfilePage(
+                      title: 'When were you born?',
+                      subtitle: "We use this to calculate your age.",
+                      formKey: _formKeys[2],
+                      child: TextFormField(
+                        controller: _dobController,
+                        decoration: const InputDecoration(
+                          labelText: 'Date of Birth',
+                          prefixIcon: Icon(Icons.calendar_today),
+                        ),
+                        readOnly: true,
+                        onTap: _selectDate,
+                        validator: (value) => value!.isEmpty
+                            ? 'Please enter your date of birth'
+                            : null,
+                      ),
+                    ),
+                    _ProfilePage(
+                      title: 'How tall are you?',
+                      subtitle: "Height is a key factor in your BMR.",
+                      formKey: _formKeys[3],
+                      child: TextFormField(
+                        controller: _heightController,
+                        decoration: const InputDecoration(
+                          labelText: 'Height (cm)',
+                          prefixIcon: Icon(Icons.height),
+                        ),
+                        keyboardType: TextInputType.number,
+                        validator: (value) =>
+                            value!.isEmpty ? 'Please enter your height' : null,
+                      ),
+                    ),
+                    _ProfilePage(
+                      title: 'Current weight?',
+                      subtitle: "We'll track your progress from here.",
+                      formKey: _formKeys[4],
+                      child: TextFormField(
+                        controller: _weightController,
+                        decoration: const InputDecoration(
+                          labelText: 'Weight (kg)',
+                          prefixIcon: Icon(Icons.monitor_weight_outlined),
+                        ),
+                        keyboardType: TextInputType.number,
+                        validator: (value) =>
+                            value!.isEmpty ? 'Please enter your weight' : null,
+                      ),
+                    ),
+                    _ProfilePage(
+                      title: 'Primary Goal',
+                      subtitle: "What do you want to achieve?",
+                      formKey: _formKeys[5],
+                      child: DropdownButtonFormField<String>(
+                        initialValue: _selectedActivityGoal,
+                        items: _activityGoals
+                            .map(
+                              (goal) => DropdownMenuItem(
+                                value: goal,
+                                child: Text(goal),
+                              ),
+                            )
+                            .toList(),
+                        onChanged: (value) {
+                          setState(() {
+                            _selectedActivityGoal = value;
+                          });
+                        },
+                        decoration: const InputDecoration(
+                          labelText: 'Select Goal',
+                          prefixIcon: Icon(Icons.flag_outlined),
+                        ),
+                        validator: (value) =>
+                            value == null ? 'Please select a goal' : null,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              // --- Bottom Action Button ---
+              Padding(
+                padding: const EdgeInsets.all(24.0),
+                child: SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      if (_pageIndex < 5) {
+                        if (_formKeys[_pageIndex].currentState!.validate()) {
+                          _pageController.nextPage(
+                            duration: const Duration(milliseconds: 300),
+                            curve: Curves.ease,
+                          );
+                        }
+                      } else {
+                        _handleSubmit();
+                      }
+                    },
+                    style: ElevatedButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 18),
+                    ),
+                    child: Text(
+                      _pageIndex == 5 ? 'COMPLETE SETUP' : 'CONTINUE',
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -267,11 +332,13 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
 
 class _ProfilePage extends StatefulWidget {
   final String title;
+  final String subtitle;
   final GlobalKey<FormState> formKey;
   final Widget child;
 
   const _ProfilePage({
     required this.title,
+    required this.subtitle,
     required this.formKey,
     required this.child,
   });
@@ -291,15 +358,26 @@ class _ProfilePageState extends State<_ProfilePage>
     return Form(
       key: widget.formKey,
       child: Padding(
-        padding: const EdgeInsets.all(24.0),
+        padding: const EdgeInsets.all(32.0),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(widget.title,
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.headlineSmall),
-            const SizedBox(height: 32),
+            Text(
+              widget.title,
+              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+                color: Theme.of(context).primaryColor,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              widget.subtitle,
+              style: Theme.of(
+                context,
+              ).textTheme.bodyLarge?.copyWith(color: Colors.grey[600]),
+            ),
+            const SizedBox(height: 48),
             widget.child,
           ],
         ),
