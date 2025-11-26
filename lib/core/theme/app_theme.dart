@@ -4,7 +4,6 @@ import 'bar_chart_theme.dart';
 export 'bar_chart_theme.dart';
 
 class AppTheme {
-  // --- Premium Color Palette ---
   static const Color _lightPrimary = Color(0xFF1A237E); // Midnight Blue
   static const Color _lightSecondary = Color(0xFFFF6D00); // Vibrant Orange
   static const Color _lightBackground = Color(0xFFF5F7FA); // Soft Grey-Blue
