@@ -50,7 +50,7 @@ class AppTheme {
       primary: _lightPrimary,
       secondary: _lightSecondary,
       surface: _lightSurface,
-      background: _lightBackground,
+
       onPrimary: Colors.white,
       onSecondary: Colors.white,
       onSurface: Colors.black87,
@@ -77,7 +77,7 @@ class AppTheme {
     // Cards
     cardTheme: CardThemeData(
       elevation: 4,
-      shadowColor: Colors.black.withOpacity(0.1),
+      shadowColor: Colors.black.withValues(alpha: 0.1),
       color: _lightSurface,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(20), // Softer corners
@@ -116,7 +116,7 @@ class AppTheme {
         backgroundColor: _lightPrimary,
         foregroundColor: Colors.white,
         elevation: 4,
-        shadowColor: _lightPrimary.withOpacity(0.4),
+        shadowColor: _lightPrimary.withValues(alpha: 0.4),
         padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         textStyle: const TextStyle(
@@ -153,8 +153,8 @@ class AppTheme {
     extensions: <ThemeExtension<dynamic>>[
       BarChartTheme(
         barColor: _lightPrimary,
-        barBackgroundColor: _lightPrimary.withOpacity(0.1),
-        gridColor: Colors.grey.withOpacity(0.2),
+        barBackgroundColor: _lightPrimary.withValues(alpha: 0.1),
+        gridColor: Colors.grey.withValues(alpha: 0.2),
         toolTipColor: _lightSecondary,
         labelStyle: const TextStyle(
           color: _lightPrimary,
@@ -174,7 +174,7 @@ class AppTheme {
       primary: _darkPrimary,
       secondary: _darkSecondary,
       surface: _darkSurface,
-      background: _darkBackground,
+
       onPrimary: Colors.white,
       onSecondary: Colors.black,
       onSurface: Colors.white,
@@ -201,7 +201,7 @@ class AppTheme {
     // Cards
     cardTheme: CardThemeData(
       elevation: 4,
-      shadowColor: Colors.black.withOpacity(0.3),
+      shadowColor: Colors.black.withValues(alpha: 0.3),
       color: _darkSurface,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
@@ -234,7 +234,7 @@ class AppTheme {
         backgroundColor: _darkPrimary,
         foregroundColor: Colors.white,
         elevation: 4,
-        shadowColor: _darkPrimary.withOpacity(0.4),
+        shadowColor: _darkPrimary.withValues(alpha: 0.4),
         padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         textStyle: const TextStyle(
@@ -259,6 +259,19 @@ class AppTheme {
         textStyle: const TextStyle(fontWeight: FontWeight.w600),
       ),
     ),
+    textButtonTheme: TextButtonThemeData(
+      style: TextButton.styleFrom(
+        foregroundColor: _darkSecondary,
+        textStyle: const TextStyle(fontWeight: FontWeight.w600),
+      ),
+    ),
+
+    // Floating Action Button
+    floatingActionButtonTheme: const FloatingActionButtonThemeData(
+      backgroundColor: _darkSecondary,
+      foregroundColor: Colors.black,
+      elevation: 6,
+    ),
 
     // Floating Action Button
     floatingActionButtonTheme: const FloatingActionButtonThemeData(
@@ -271,7 +284,7 @@ class AppTheme {
     extensions: <ThemeExtension<dynamic>>[
       BarChartTheme(
         barColor: _darkPrimary,
-        barBackgroundColor: _darkPrimary.withOpacity(0.1),
+        barBackgroundColor: _darkPrimary.withValues(alpha: 0.1),
         gridColor: Colors.white10,
         toolTipColor: _darkSecondary,
         labelStyle: const TextStyle(
