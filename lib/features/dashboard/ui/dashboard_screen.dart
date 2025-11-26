@@ -3,6 +3,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gainers/features/profile/providers/profile_provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:gainers/features/dashboard/ui/widgets/dashboard_card.dart';
+import 'package:gainers/features/activity/ui/activity_details_screen.dart';
+import 'package:gainers/features/nutrition/ui/nutrition_screen.dart';
+import 'package:gainers/features/sleep/ui/sleep_log_screen.dart';
+import 'package:gainers/features/progress/ui/progress_screen.dart';
+import 'package:gainers/features/activity/providers/activity_details_provider.dart';
+import 'package:gainers/features/nutrition/providers/nutrition_provider.dart';
+import 'package:intl/intl.dart';
 
 class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
@@ -11,7 +18,28 @@ class DashboardScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final user = Supabase.instance.client.auth.currentUser;
     final profileAsync = ref.watch(getProfileProvider(user?.id ?? ''));
+    final healthAsync = ref.watch(healthProvider);
+    final nutritionAsync = ref.watch(nutritionProvider);
     final theme = Theme.of(context);
+
+    // Calculate Nutrition Data
+    final int consumedCalories =
+        nutritionAsync.value?.fold<int>(
+          0,
+          (sum, item) => sum + item.calories,
+        ) ??
+        0;
+    const int targetCalories = 2500; // Hardcoded target for now
+
+    // Calculate Activity Data
+    final int steps = healthAsync.value?.todaysSteps ?? 0;
+    final double distanceKm = (steps * 0.762) / 1000; // Approx 0.762m per step
+    final int burnedCalories = (steps * 0.04)
+        .round(); // Approx 0.04 kcal per step
+    final double stepProgress = (steps / 10000).clamp(
+      0.0,
+      1.0,
+    ); // Target 10,000 steps
 
     return Scaffold(
       body: CustomScrollView(
@@ -83,7 +111,14 @@ class DashboardScreen extends ConsumerWidget {
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
-                  onTap: () {},
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const ActivityDetailsScreen(),
+                      ),
+                    );
+                  },
                   child: Column(
                     children: [
                       Row(
@@ -121,7 +156,7 @@ class DashboardScreen extends ConsumerWidget {
                               children: [
                                 Center(
                                   child: CircularProgressIndicator(
-                                    value: 0.65,
+                                    value: stepProgress,
                                     strokeWidth: 10,
                                     backgroundColor: Colors.white.withValues(
                                       alpha: 0.2,
@@ -132,10 +167,10 @@ class DashboardScreen extends ConsumerWidget {
                                         ),
                                   ),
                                 ),
-                                const Center(
+                                Center(
                                   child: Text(
-                                    '65%',
-                                    style: TextStyle(
+                                    '${(stepProgress * 100).toInt()}%',
+                                    style: const TextStyle(
                                       color: Colors.white,
                                       fontWeight: FontWeight.bold,
                                       fontSize: 18,
@@ -146,48 +181,48 @@ class DashboardScreen extends ConsumerWidget {
                             ),
                           ),
                           const SizedBox(width: 24),
-                          const Expanded(
+                          Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  '6,500',
-                                  style: TextStyle(
+                                  NumberFormat('#,###').format(steps),
+                                  style: const TextStyle(
                                     fontSize: 32,
                                     fontWeight: FontWeight.bold,
                                     color: Colors.white,
                                   ),
                                 ),
-                                Text(
+                                const Text(
                                   'Steps Taken',
                                   style: TextStyle(color: Colors.white70),
                                 ),
-                                SizedBox(height: 8),
+                                const SizedBox(height: 8),
                                 Row(
                                   children: [
-                                    Icon(
+                                    const Icon(
                                       Icons.local_fire_department,
                                       color: Colors.white70,
                                       size: 16,
                                     ),
-                                    SizedBox(width: 4),
+                                    const SizedBox(width: 4),
                                     Text(
-                                      '320 kcal',
-                                      style: TextStyle(
+                                      '$burnedCalories kcal',
+                                      style: const TextStyle(
                                         color: Colors.white70,
                                         fontSize: 12,
                                       ),
                                     ),
-                                    SizedBox(width: 12),
-                                    Icon(
+                                    const SizedBox(width: 12),
+                                    const Icon(
                                       Icons.location_on,
                                       color: Colors.white70,
                                       size: 16,
                                     ),
-                                    SizedBox(width: 4),
+                                    const SizedBox(width: 4),
                                     Text(
-                                      '4.2 km',
-                                      style: TextStyle(
+                                      '${distanceKm.toStringAsFixed(1)} km',
+                                      style: const TextStyle(
                                         color: Colors.white70,
                                         fontSize: 12,
                                       ),
@@ -215,7 +250,14 @@ class DashboardScreen extends ConsumerWidget {
                   childAspectRatio: 1.1,
                   children: [
                     DashboardCard(
-                      onTap: () {},
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const NutritionScreen(),
+                          ),
+                        );
+                      },
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -244,9 +286,13 @@ class DashboardScreen extends ConsumerWidget {
                                 fontWeight: FontWeight.bold,
                               ),
                               children: [
-                                const TextSpan(text: '1,200'),
                                 TextSpan(
-                                  text: ' / 2,500',
+                                  text: NumberFormat(
+                                    '#,###',
+                                  ).format(consumedCalories),
+                                ),
+                                TextSpan(
+                                  text: ' / $targetCalories',
                                   style: TextStyle(
                                     fontSize: 14,
                                     color: Colors.grey[400],
@@ -259,7 +305,13 @@ class DashboardScreen extends ConsumerWidget {
                       ),
                     ),
                     DashboardCard(
-                      onTap: () {},
+                      onTap: () {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Hydration feature coming soon!'),
+                          ),
+                        );
+                      },
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -303,7 +355,14 @@ class DashboardScreen extends ConsumerWidget {
                       ),
                     ),
                     DashboardCard(
-                      onTap: () {},
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const SleepLogScreen(),
+                          ),
+                        );
+                      },
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -336,7 +395,14 @@ class DashboardScreen extends ConsumerWidget {
                       ),
                     ),
                     DashboardCard(
-                      onTap: () {},
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const ProgressScreen(),
+                          ),
+                        );
+                      },
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -360,7 +426,7 @@ class DashboardScreen extends ConsumerWidget {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            '72.5 kg',
+                            '${profileAsync.value?.weightKg ?? '--'} kg',
                             style: theme.textTheme.titleLarge?.copyWith(
                               fontWeight: FontWeight.bold,
                             ),

@@ -4,7 +4,6 @@ import 'bar_chart_theme.dart';
 export 'bar_chart_theme.dart';
 
 class AppTheme {
-  // --- Premium Color Palette ---
   static const Color _lightPrimary = Color(0xFF1A237E); // Midnight Blue
   static const Color _lightSecondary = Color(0xFFFF6D00); // Vibrant Orange
   static const Color _lightBackground = Color(0xFFF5F7FA); // Soft Grey-Blue
@@ -258,19 +257,6 @@ class AppTheme {
         foregroundColor: _darkSecondary,
         textStyle: const TextStyle(fontWeight: FontWeight.w600),
       ),
-    ),
-    textButtonTheme: TextButtonThemeData(
-      style: TextButton.styleFrom(
-        foregroundColor: _darkSecondary,
-        textStyle: const TextStyle(fontWeight: FontWeight.w600),
-      ),
-    ),
-
-    // Floating Action Button
-    floatingActionButtonTheme: const FloatingActionButtonThemeData(
-      backgroundColor: _darkSecondary,
-      foregroundColor: Colors.black,
-      elevation: 6,
     ),
 
     // Floating Action Button
