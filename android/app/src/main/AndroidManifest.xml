@@ -1,9 +1,12 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.example.gainers">
+    
+    <!-- Health package stuff -->
     <uses-permission android:name="android.permission.ACTIVITY_RECOGNITION" />
     <uses-permission android:name="android.permission.health.READ_STEPS" />
     <uses-permission android:name="android.permission.health.WRITE_STEPS" />
 
+    <!-- Health package, Youtube, and url launcher queries-->
     <queries>
         <package android:name="com.google.android.apps.healthdata" />
         <intent>
