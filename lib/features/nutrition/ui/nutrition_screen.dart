@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../providers/nutrition_provider.dart';
 import '../data/food_model.dart';
 
@@ -24,7 +25,6 @@ class NutritionScreen extends ConsumerWidget {
             ],
           ),
         ),
-        // Menampilkan data berdasarkan status (Loading / Error / Data Ada)
         body: foodState.when(
           loading: () => const Center(child: CircularProgressIndicator()),
           error: (e, _) => Center(child: Text('Error: $e')),
@@ -46,9 +46,7 @@ class NutritionScreen extends ConsumerWidget {
     );
   }
 
-  // Widget pembantu untuk membuat List Makanan
   Widget _buildList(List<FoodLog> logs, String type) {
-    // Filter data sesuai Tab yang aktif
     final filtered = logs.where((l) => l.mealType == type).toList();
 
     if (filtered.isEmpty) {
@@ -79,9 +77,8 @@ class NutritionScreen extends ConsumerWidget {
               style: const TextStyle(fontWeight: FontWeight.bold),
             ),
             subtitle: Text('${item.calories} kcal'),
-            // Menampilkan detail makro (Protein, Carbs, Fat)
             trailing: Text(
-              'P:${item.protein} C:${item.carbs} F:${item.fat}',
+              'P:${item.protein}g  C:${item.carbs}g  F:${item.fat}g',
               style: const TextStyle(fontSize: 12, color: Colors.grey),
             ),
           ),
@@ -90,16 +87,18 @@ class NutritionScreen extends ConsumerWidget {
     );
   }
 
-  // Dialog Pop-up Input Manual
   void _showAddDialog(BuildContext context, WidgetRef ref) {
     final nameCtrl = TextEditingController();
     final calCtrl = TextEditingController();
-    String selectedMeal = 'breakfast'; // Default value
+    final proteinCtrl = TextEditingController();
+    final carbsCtrl = TextEditingController();
+    final fatCtrl = TextEditingController();
+
+    String selectedMeal = 'breakfast';
 
     showDialog(
       context: context,
       builder: (ctx) => StatefulBuilder(
-        // Perlu StatefulBuilder agar Dropdown bisa berubah nilai
         builder: (context, setState) {
           return AlertDialog(
             title: const Text('Add Food Manual'),
@@ -110,13 +109,51 @@ class NutritionScreen extends ConsumerWidget {
                   TextField(
                     controller: nameCtrl,
                     decoration: const InputDecoration(
-                      labelText: 'Food Name (e.g. Nasi Goreng)',
+                      labelText: 'Food Name',
+                      hintText: 'e.g. Nasi Goreng',
                     ),
                   ),
+                  const SizedBox(height: 8),
                   TextField(
                     controller: calCtrl,
-                    decoration: const InputDecoration(labelText: 'Calories'),
+                    decoration: const InputDecoration(
+                      labelText: 'Calories (kcal)',
+                    ),
                     keyboardType: TextInputType.number,
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: proteinCtrl,
+                          decoration: const InputDecoration(
+                            labelText: 'Protein (g)',
+                          ),
+                          keyboardType: TextInputType.number,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: TextField(
+                          controller: carbsCtrl,
+                          decoration: const InputDecoration(
+                            labelText: 'Carbs (g)',
+                          ),
+                          keyboardType: TextInputType.number,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: TextField(
+                          controller: fatCtrl,
+                          decoration: const InputDecoration(
+                            labelText: 'Fat (g)',
+                          ),
+                          keyboardType: TextInputType.number,
+                        ),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 16),
                   InputDecorator(
@@ -126,18 +163,16 @@ class NutritionScreen extends ConsumerWidget {
                         value: selectedMeal,
                         isDense: true,
                         onChanged: (val) {
-                          if (val != null) {
-                            setState(() => selectedMeal = val);
-                          }
+                          if (val != null) setState(() => selectedMeal = val);
                         },
-                        items: ['breakfast', 'lunch', 'dinner', 'snack'].map((
-                          String value,
-                        ) {
-                          return DropdownMenuItem<String>(
-                            value: value,
-                            child: Text(value.toUpperCase()),
-                          );
-                        }).toList(),
+                        items: ['breakfast', 'lunch', 'dinner', 'snack']
+                            .map(
+                              (val) => DropdownMenuItem(
+                                value: val,
+                                child: Text(val.toUpperCase()),
+                              ),
+                            )
+                            .toList(),
                       ),
                     ),
                   ),
@@ -153,15 +188,20 @@ class NutritionScreen extends ConsumerWidget {
                 onPressed: () {
                   if (nameCtrl.text.isEmpty || calCtrl.text.isEmpty) return;
 
+                  final userId = Supabase.instance.client.auth.currentUser?.id;
+                  if (userId == null) return;
+
                   final log = FoodLog(
-                    userId: 'dummy-user-id', // Nanti ambil dari Auth Provider
+                    userId: userId,
                     foodName: nameCtrl.text,
                     calories: int.tryParse(calCtrl.text) ?? 0,
+                    protein: int.tryParse(proteinCtrl.text) ?? 0,
+                    carbs: int.tryParse(carbsCtrl.text) ?? 0,
+                    fat: int.tryParse(fatCtrl.text) ?? 0,
                     mealType: selectedMeal,
                     createdAt: DateTime.now(),
                   );
 
-                  // Panggil Provider untuk simpan data
                   ref.read(nutritionProvider.notifier).addLog(log);
                   Navigator.pop(ctx);
                 },
