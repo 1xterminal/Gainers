@@ -12,8 +12,10 @@ class ActivityDetailsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    //watch health provider to get the data
     final asyncHealthState = ref.watch(healthProvider);
 
+    //get the bar chart theme from app_theme.dart
     final barTheme = Theme.of(context).extension<BarChartTheme>()!;
 
     return asyncHealthState.when(
@@ -74,12 +76,17 @@ class ActivityDetailsScreen extends ConsumerWidget {
         final lastSevenDays = healthStats.weeklyData;
         final stepsToday = healthStats.todaysSteps;
 
+        //calculate total steps for the last 7 days
         final int totalStepsSeven = lastSevenDays.fold(
           0,
           (sum, item) => sum + item.steps,
         );
+
+        //calculate total distance for today, last 7 days, and lifetime
         final double totalDistanceToday = stepsToday * 0.0003048;
         final double totalDistanceSeven = totalStepsSeven * 0.0003048;
+        final double totalDistanceLifetime =
+            healthStats.lifetimeSteps * 0.0003048;
 
         return Scaffold(
           appBar: AppBar(
@@ -102,6 +109,7 @@ class ActivityDetailsScreen extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
+                // -- bar chart --
                 Text(
                   'Last 7 Days',
                   style: barTheme.labelStyle.copyWith(
@@ -118,6 +126,7 @@ class ActivityDetailsScreen extends ConsumerWidget {
                 ),
                 const SizedBox(height: 40),
 
+                // -- today's stats --
                 Text(
                   'Today\'s Stats',
                   style: barTheme.labelStyle.copyWith(
@@ -150,8 +159,9 @@ class ActivityDetailsScreen extends ConsumerWidget {
                 ),
                 const SizedBox(height: 40),
 
+                // -- weekly stats --
                 Text(
-                  'Lifetime Stats',
+                  'Weekly Stats',
                   style: barTheme.labelStyle.copyWith(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
@@ -180,7 +190,43 @@ class ActivityDetailsScreen extends ConsumerWidget {
                     ),
                   ],
                 ),
+                const SizedBox(height: 40),
+
+                // -- lifetime stats --
+                Text(
+                  'Lifetime Stats',
+                  style: barTheme.labelStyle.copyWith(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
                 const SizedBox(height: 16),
+
+                Row(
+                  children: [
+                    _buildInfoCard(
+                      title: 'Total Steps',
+                      value: NumberFormat(
+                        '#,###',
+                      ).format(healthStats.lifetimeSteps),
+                      icon: Icons.directions_run,
+                      iconColor: barTheme.barColor,
+                      cardColor: barTheme.gridColor,
+                      textColor: barTheme.labelStyle.color!,
+                    ),
+                    const SizedBox(width: 16),
+                    _buildInfoCard(
+                      title: 'Total Distance (km)',
+                      value: NumberFormat(
+                        '#,###',
+                      ).format(totalDistanceLifetime),
+                      icon: Icons.arrow_circle_right_outlined,
+                      iconColor: barTheme.barColor,
+                      cardColor: barTheme.gridColor,
+                      textColor: barTheme.labelStyle.color!,
+                    ),
+                  ],
+                ),
               ],
             ),
           ),
@@ -189,6 +235,7 @@ class ActivityDetailsScreen extends ConsumerWidget {
     );
   }
 
+  //helper function to build the bar chart
   Widget _buildBarChart(List<StepData> data, BarChartTheme barTheme) {
     double maxSteps = 0;
     for (var i in data) {
@@ -284,6 +331,7 @@ class ActivityDetailsScreen extends ConsumerWidget {
     );
   }
 
+  //helper function to build the info card
   Widget _buildInfoCard({
     required String title,
     required String value,
