@@ -19,6 +19,7 @@ class _ExerciseTutorialScreenState
 
   String _currentQuery = '';
 
+  //perform search
   void _performSearch() {
     if (_searchController.text.isNotEmpty) {
       setState(() {
@@ -27,6 +28,7 @@ class _ExerciseTutorialScreenState
     }
   }
 
+  //opens video url in external application
   Future<void> _launchVideo(String? url) async {
     if (url == null) return;
     final uri = Uri.parse(url);
@@ -49,6 +51,7 @@ class _ExerciseTutorialScreenState
 
   @override
   Widget build(BuildContext context) {
+    //watch the provider with the current query
     final asyncVideos = ref.watch(exerciseVideoProvider(_currentQuery));
 
     final barTheme = Theme.of(context).extension<BarChartTheme>()!;
@@ -57,6 +60,7 @@ class _ExerciseTutorialScreenState
       appBar: AppBar(title: const Text('Fitness & Tutorials')),
       body: Column(
         children: [
+          // -- search bar --
           Padding(
             padding: const EdgeInsets.only(
               top: 20,
@@ -106,6 +110,7 @@ class _ExerciseTutorialScreenState
             ),
           ),
 
+          // -- video list --
           Expanded(
             child: asyncVideos.when(
               data: (videos) {
@@ -139,6 +144,7 @@ class _ExerciseTutorialScreenState
     );
   }
 
+  //helper function to build the video card
   Widget _buildVideoCard(FitnessVideo video, BarChartTheme barTheme) {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
