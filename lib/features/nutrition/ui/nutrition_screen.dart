@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
 import '../providers/nutrition_provider.dart';
 import '../data/food_model.dart';
 import 'meal_detail_screen.dart';

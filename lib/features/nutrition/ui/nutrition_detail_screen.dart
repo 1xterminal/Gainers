@@ -10,7 +10,7 @@ class NutritionDetailScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final foodState = ref.watch(nutritionProvider);
     final selectedDate = ref.read(nutritionProvider.notifier).selectedDate;
-    final theme = Theme.of(context);
+    // final theme = Theme.of(context); // Unused
 
     final logs = foodState.value ?? [];
     final totalCalories = logs.fold(0, (sum, item) => sum + item.calories);
