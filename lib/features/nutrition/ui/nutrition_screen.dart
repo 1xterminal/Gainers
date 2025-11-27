@@ -1,10 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-<<<<<<< HEAD
-=======
 import 'package:intl/intl.dart';
->>>>>>> 52f8eec8d07533973f81cf95c3745a030aa4e79c
 import '../providers/nutrition_provider.dart';
 import '../data/food_model.dart';
 
@@ -144,9 +141,6 @@ class NutritionScreen extends ConsumerWidget {
     );
   }
 
-<<<<<<< HEAD
-  Widget _buildList(List<FoodLog> logs, String type) {
-=======
   Widget _buildDateNavigator(BuildContext context, NutritionNotifier notifier) {
     final date = notifier.selectedDate;
     final isToday = DateUtils.isSameDay(date, DateTime.now());
@@ -198,7 +192,6 @@ class NutritionScreen extends ConsumerWidget {
   }
 
   Widget _buildList(List<FoodLog> logs, String type, WidgetRef ref) {
->>>>>>> 52f8eec8d07533973f81cf95c3745a030aa4e79c
     final filtered = logs.where((l) => l.mealType == type).toList();
 
     if (filtered.isEmpty) {
@@ -221,19 +214,6 @@ class NutritionScreen extends ConsumerWidget {
       itemCount: filtered.length,
       itemBuilder: (context, i) {
         final item = filtered[i];
-<<<<<<< HEAD
-        return Card(
-          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-          child: ListTile(
-            title: Text(
-              item.foodName,
-              style: const TextStyle(fontWeight: FontWeight.bold),
-            ),
-            subtitle: Text('${item.calories} kcal'),
-            trailing: Text(
-              'P:${item.protein}g  C:${item.carbs}g  F:${item.fat}g',
-              style: const TextStyle(fontSize: 12, color: Colors.grey),
-=======
         return Dismissible(
           key: Key(item.id.toString()),
           direction: DismissDirection.endToStart,
@@ -263,7 +243,6 @@ class NutritionScreen extends ConsumerWidget {
                 'P:${item.protein} C:${item.carbs} F:${item.fat}',
                 style: const TextStyle(fontSize: 12, color: Colors.grey),
               ),
->>>>>>> 52f8eec8d07533973f81cf95c3745a030aa4e79c
             ),
           ),
         );
@@ -277,10 +256,6 @@ class NutritionScreen extends ConsumerWidget {
     final proteinCtrl = TextEditingController();
     final carbsCtrl = TextEditingController();
     final fatCtrl = TextEditingController();
-<<<<<<< HEAD
-
-=======
->>>>>>> 52f8eec8d07533973f81cf95c3745a030aa4e79c
     String selectedMeal = 'breakfast';
 
     showDialog(
