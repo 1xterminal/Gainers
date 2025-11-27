@@ -258,28 +258,13 @@ class AppTheme {
         textStyle: const TextStyle(fontWeight: FontWeight.w600),
       ),
     ),
-    textButtonTheme: TextButtonThemeData(
-      style: TextButton.styleFrom(
-        foregroundColor: _darkSecondary,
-        textStyle: const TextStyle(fontWeight: FontWeight.w600),
-      ),
-    ),
 
-    // Floating Action Button
     floatingActionButtonTheme: const FloatingActionButtonThemeData(
       backgroundColor: _darkSecondary,
       foregroundColor: Colors.black,
       elevation: 6,
     ),
 
-    // Floating Action Button
-    floatingActionButtonTheme: const FloatingActionButtonThemeData(
-      backgroundColor: _darkSecondary,
-      foregroundColor: Colors.black,
-      elevation: 6,
-    ),
-
-    // Extensions
     extensions: <ThemeExtension<dynamic>>[
       BarChartTheme(
         barColor: _darkPrimary,
