@@ -399,7 +399,7 @@ class DashboardScreen extends ConsumerWidget {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => const ProgressScreen(),
+                            builder: (context) => const ProgressScreen(initialScreenIndex: 3),
                           ),
                         );
                       },
