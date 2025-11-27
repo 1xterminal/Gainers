@@ -1,40 +1,45 @@
-
 import 'package:flutter/material.dart';
 
 class DashboardCard extends StatelessWidget {
   final Widget child;
   final VoidCallback? onTap;
+  final Gradient? gradient;
+  final Color? backgroundColor;
 
   const DashboardCard({
     super.key,
     required this.child,
     this.onTap,
+    this.gradient,
+    this.backgroundColor,
   });
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Container(
       decoration: BoxDecoration(
-        color: Theme.of(context).cardColor,
-        borderRadius: BorderRadius.circular(16),
+        color:
+            backgroundColor ??
+            (gradient == null ? theme.cardTheme.color : null),
+        gradient: gradient,
+        borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withAlpha((255 * 0.05).round()),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+            color: (gradient != null ? theme.primaryColor : Colors.black)
+                .withValues(alpha: 0.1),
+            blurRadius: 12,
+            offset: const Offset(0, 6),
           ),
         ],
-        border: Border.all(color: Colors.grey.withAlpha((255 * 0.1).round())),
       ),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(16),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: child,
-          ),
+          borderRadius: BorderRadius.circular(24),
+          child: Padding(padding: const EdgeInsets.all(20), child: child),
         ),
       ),
     );

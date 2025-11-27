@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+<<<<<<< HEAD
+=======
+import 'package:intl/intl.dart';
+>>>>>>> 52f8eec8d07533973f81cf95c3745a030aa4e79c
 import '../providers/nutrition_provider.dart';
 import '../data/food_model.dart';
 
@@ -10,19 +14,113 @@ class NutritionScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final foodState = ref.watch(nutritionProvider);
+    final notifier = ref.read(nutritionProvider.notifier);
+
+    // Calculate totals safely
+    final logs = foodState.value ?? [];
+    final totalCalories = logs.fold(0, (sum, item) => sum + item.calories);
+    final totalProtein = logs.fold(0, (sum, item) => sum + item.protein);
+    final totalCarbs = logs.fold(0, (sum, item) => sum + item.carbs);
+    final totalFat = logs.fold(0, (sum, item) => sum + item.fat);
+
+    // Target (Hardcoded for now, ideally from profile)
+    const targetCalories = 2000;
+    final progress = (totalCalories / targetCalories).clamp(0.0, 1.0);
 
     return DefaultTabController(
-      length: 4, // Breakfast, Lunch, Dinner, Snack
+      length: 4,
       child: Scaffold(
         appBar: AppBar(
           title: const Text('Nutrition Log'),
-          bottom: const TabBar(
-            tabs: [
-              Tab(text: 'Breakfast'),
-              Tab(text: 'Lunch'),
-              Tab(text: 'Dinner'),
-              Tab(text: 'Snack'),
-            ],
+          bottom: PreferredSize(
+            preferredSize: const Size.fromHeight(
+              220,
+            ), // Increased height for summary
+            child: Column(
+              children: [
+                // Date Navigator
+                _buildDateNavigator(context, notifier),
+
+                // Summary Card
+                Container(
+                  margin: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).cardColor,
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withAlpha(20),
+                        blurRadius: 8,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'Calories',
+                            style: Theme.of(context).textTheme.titleMedium,
+                          ),
+                          Text(
+                            '$totalCalories / $targetCalories kcal',
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      LinearProgressIndicator(
+                        value: progress,
+                        backgroundColor: Colors.grey[300],
+                        color: progress > 1.0 ? Colors.red : Colors.green,
+                        minHeight: 8,
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      const SizedBox(height: 16),
+                      // Macro Breakdown
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceAround,
+                        children: [
+                          _buildMacroItem(
+                            context,
+                            'Protein',
+                            totalProtein,
+                            Colors.redAccent,
+                          ),
+                          _buildMacroItem(
+                            context,
+                            'Carbs',
+                            totalCarbs,
+                            Colors.blueAccent,
+                          ),
+                          _buildMacroItem(
+                            context,
+                            'Fat',
+                            totalFat,
+                            Colors.orangeAccent,
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+
+                const TabBar(
+                  tabs: [
+                    Tab(text: 'Breakfast'),
+                    Tab(text: 'Lunch'),
+                    Tab(text: 'Dinner'),
+                    Tab(text: 'Snack'),
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
         body: foodState.when(
@@ -30,10 +128,10 @@ class NutritionScreen extends ConsumerWidget {
           error: (e, _) => Center(child: Text('Error: $e')),
           data: (logs) => TabBarView(
             children: [
-              _buildList(logs, 'breakfast'),
-              _buildList(logs, 'lunch'),
-              _buildList(logs, 'dinner'),
-              _buildList(logs, 'snack'),
+              _buildList(logs, 'breakfast', ref),
+              _buildList(logs, 'lunch', ref),
+              _buildList(logs, 'dinner', ref),
+              _buildList(logs, 'snack', ref),
             ],
           ),
         ),
@@ -46,7 +144,61 @@ class NutritionScreen extends ConsumerWidget {
     );
   }
 
+<<<<<<< HEAD
   Widget _buildList(List<FoodLog> logs, String type) {
+=======
+  Widget _buildDateNavigator(BuildContext context, NutritionNotifier notifier) {
+    final date = notifier.selectedDate;
+    final isToday = DateUtils.isSameDay(date, DateTime.now());
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          IconButton(
+            icon: const Icon(Icons.chevron_left),
+            onPressed: () =>
+                notifier.setDate(date.subtract(const Duration(days: 1))),
+          ),
+          Text(
+            isToday ? 'Today' : DateFormat('EEE, d MMM').format(date),
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          ),
+          IconButton(
+            icon: const Icon(Icons.chevron_right),
+            onPressed: isToday
+                ? null
+                : () => notifier.setDate(date.add(const Duration(days: 1))),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMacroItem(
+    BuildContext context,
+    String label,
+    int value,
+    Color color,
+  ) {
+    return Column(
+      children: [
+        Text(
+          '$value g',
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: color,
+            fontSize: 16,
+          ),
+        ),
+        Text(label, style: const TextStyle(fontSize: 12, color: Colors.grey)),
+      ],
+    );
+  }
+
+  Widget _buildList(List<FoodLog> logs, String type, WidgetRef ref) {
+>>>>>>> 52f8eec8d07533973f81cf95c3745a030aa4e79c
     final filtered = logs.where((l) => l.mealType == type).toList();
 
     if (filtered.isEmpty) {
@@ -69,6 +221,7 @@ class NutritionScreen extends ConsumerWidget {
       itemCount: filtered.length,
       itemBuilder: (context, i) {
         final item = filtered[i];
+<<<<<<< HEAD
         return Card(
           margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
           child: ListTile(
@@ -80,6 +233,37 @@ class NutritionScreen extends ConsumerWidget {
             trailing: Text(
               'P:${item.protein}g  C:${item.carbs}g  F:${item.fat}g',
               style: const TextStyle(fontSize: 12, color: Colors.grey),
+=======
+        return Dismissible(
+          key: Key(item.id.toString()),
+          direction: DismissDirection.endToStart,
+          background: Container(
+            color: Colors.red,
+            alignment: Alignment.centerRight,
+            padding: const EdgeInsets.only(right: 20),
+            child: const Icon(Icons.delete, color: Colors.white),
+          ),
+          onDismissed: (direction) {
+            if (item.id != null) {
+              ref.read(nutritionProvider.notifier).deleteLog(item.id!);
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('${item.foodName} deleted')),
+              );
+            }
+          },
+          child: Card(
+            margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+            child: ListTile(
+              title: Text(
+                item.foodName,
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+              subtitle: Text('${item.calories} kcal'),
+              trailing: Text(
+                'P:${item.protein} C:${item.carbs} F:${item.fat}',
+                style: const TextStyle(fontSize: 12, color: Colors.grey),
+              ),
+>>>>>>> 52f8eec8d07533973f81cf95c3745a030aa4e79c
             ),
           ),
         );
@@ -93,7 +277,10 @@ class NutritionScreen extends ConsumerWidget {
     final proteinCtrl = TextEditingController();
     final carbsCtrl = TextEditingController();
     final fatCtrl = TextEditingController();
+<<<<<<< HEAD
 
+=======
+>>>>>>> 52f8eec8d07533973f81cf95c3745a030aa4e79c
     String selectedMeal = 'breakfast';
 
     showDialog(
@@ -199,7 +386,9 @@ class NutritionScreen extends ConsumerWidget {
                     carbs: int.tryParse(carbsCtrl.text) ?? 0,
                     fat: int.tryParse(fatCtrl.text) ?? 0,
                     mealType: selectedMeal,
-                    createdAt: DateTime.now(),
+                    createdAt: ref
+                        .read(nutritionProvider.notifier)
+                        .selectedDate, // Use selected date
                   );
 
                   ref.read(nutritionProvider.notifier).addLog(log);
