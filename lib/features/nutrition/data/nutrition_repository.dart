@@ -36,4 +36,13 @@ class NutritionRepository {
 
     return (response as List).map((e) => FoodLog.fromJson(e)).toList();
   }
+
+  Future<void> deleteFoodLog(int id) async {
+    await _client.from('food_logs').delete().eq('id', id);
+  }
+
+  Future<void> updateFoodLog(FoodLog log) async {
+    if (log.id == null) throw Exception('Log ID is required for update');
+    await _client.from('food_logs').update(log.toJson()).eq('id', log.id!);
+  }
 }

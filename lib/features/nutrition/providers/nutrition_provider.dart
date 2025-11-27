@@ -12,6 +12,7 @@ final nutritionRepositoryProvider = Provider((ref) {
 // 2. Async Notifier (Pengelola Data List Makanan)
 class NutritionNotifier extends AsyncNotifier<List<FoodLog>> {
   late final NutritionRepository _repo;
+  DateTime _selectedDate = DateTime.now();
 
   @override
   Future<List<FoodLog>> build() async {
@@ -20,14 +21,38 @@ class NutritionNotifier extends AsyncNotifier<List<FoodLog>> {
   }
 
   Future<List<FoodLog>> _loadFoodLogs() async {
-    // Ambil data (sementara tanggal hari ini diabaikan dulu di repo dummy)
-    return _repo.getFoodLogs(DateTime.now());
+    return _repo.getFoodLogs(_selectedDate);
   }
+
+  Future<void> setDate(DateTime date) async {
+    _selectedDate = date;
+    state = const AsyncValue.loading();
+    state = await AsyncValue.guard(() => _loadFoodLogs());
+  }
+
+  DateTime get selectedDate => _selectedDate;
 
   Future<void> addLog(FoodLog log) async {
     state = const AsyncValue.loading();
     state = await AsyncValue.guard(() async {
       await _repo.addFoodLog(log);
+      return _loadFoodLogs();
+    });
+  }
+
+  Future<void> deleteLog(int id) async {
+    // Optimistic update (optional) or just reload
+    state = const AsyncValue.loading();
+    state = await AsyncValue.guard(() async {
+      await _repo.deleteFoodLog(id);
+      return _loadFoodLogs();
+    });
+  }
+
+  Future<void> updateLog(FoodLog log) async {
+    state = const AsyncValue.loading();
+    state = await AsyncValue.guard(() async {
+      await _repo.updateFoodLog(log);
       return _loadFoodLogs();
     });
   }

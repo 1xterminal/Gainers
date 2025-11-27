@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/nutrition_provider.dart';
 import '../data/food_model.dart';
+import 'meal_detail_screen.dart';
+import 'nutrition_detail_screen.dart';
+import '../../../core/widgets/horizontal_date_wheel.dart';
+import 'widgets/macro_pie_chart.dart';
 
 class NutritionScreen extends ConsumerWidget {
   const NutritionScreen({super.key});
@@ -9,168 +13,241 @@ class NutritionScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final foodState = ref.watch(nutritionProvider);
+    final notifier = ref.read(nutritionProvider.notifier);
+    final selectedDate = ref.watch(nutritionProvider.notifier).selectedDate;
 
-    return DefaultTabController(
-      length: 4, // Breakfast, Lunch, Dinner, Snack
-      child: Scaffold(
-        appBar: AppBar(
-          title: const Text('Nutrition Log'),
-          bottom: const TabBar(
-            tabs: [
-              Tab(text: 'Breakfast'),
-              Tab(text: 'Lunch'),
-              Tab(text: 'Dinner'),
-              Tab(text: 'Snack'),
-            ],
-          ),
-        ),
-        // Menampilkan data berdasarkan status (Loading / Error / Data Ada)
-        body: foodState.when(
-          loading: () => const Center(child: CircularProgressIndicator()),
-          error: (e, _) => Center(child: Text('Error: $e')),
-          data: (logs) => TabBarView(
-            children: [
-              _buildList(logs, 'breakfast'),
-              _buildList(logs, 'lunch'),
-              _buildList(logs, 'dinner'),
-              _buildList(logs, 'snack'),
-            ],
-          ),
-        ),
-        floatingActionButton: FloatingActionButton(
-          onPressed: () => _showAddDialog(context, ref),
-          tooltip: 'Add Food',
-          child: const Icon(Icons.add),
-        ),
-      ),
-    );
-  }
+    // Calculate totals safely
+    final logs = foodState.value ?? [];
+    final totalCalories = logs.fold(0, (sum, item) => sum + item.calories);
+    final totalProtein = logs.fold(0, (sum, item) => sum + item.protein);
+    final totalCarbs = logs.fold(0, (sum, item) => sum + item.carbs);
+    final totalFat = logs.fold(0, (sum, item) => sum + item.fat);
 
-  // Widget pembantu untuk membuat List Makanan
-  Widget _buildList(List<FoodLog> logs, String type) {
-    // Filter data sesuai Tab yang aktif
-    final filtered = logs.where((l) => l.mealType == type).toList();
-
-    if (filtered.isEmpty) {
-      return Center(
+    return Scaffold(
+      appBar: AppBar(title: const Text('Nutrition Log'), centerTitle: true),
+      body: SingleChildScrollView(
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.no_food, size: 48, color: Colors.grey),
-            const SizedBox(height: 8),
-            Text(
-              'No food logged for $type',
-              style: const TextStyle(color: Colors.grey),
+            // 1. Horizontal Date Wheel (Unique Date Picker)
+            HorizontalDateWheel(
+              selectedDate: selectedDate,
+              onDateSelected: (date) {
+                notifier.setDate(date);
+              },
             ),
-          ],
-        ),
-      );
-    }
 
-    return ListView.builder(
-      itemCount: filtered.length,
-      itemBuilder: (context, i) {
-        final item = filtered[i];
-        return Card(
-          margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-          child: ListTile(
-            title: Text(
-              item.foodName,
-              style: const TextStyle(fontWeight: FontWeight.bold),
-            ),
-            subtitle: Text('${item.calories} kcal'),
-            // Menampilkan detail makro (Protein, Carbs, Fat)
-            trailing: Text(
-              'P:${item.protein} C:${item.carbs} F:${item.fat}',
-              style: const TextStyle(fontSize: 12, color: Colors.grey),
-            ),
-          ),
-        );
-      },
-    );
-  }
+            const SizedBox(height: 16),
 
-  // Dialog Pop-up Input Manual
-  void _showAddDialog(BuildContext context, WidgetRef ref) {
-    final nameCtrl = TextEditingController();
-    final calCtrl = TextEditingController();
-    String selectedMeal = 'breakfast'; // Default value
-
-    showDialog(
-      context: context,
-      builder: (ctx) => StatefulBuilder(
-        // Perlu StatefulBuilder agar Dropdown bisa berubah nilai
-        builder: (context, setState) {
-          return AlertDialog(
-            title: const Text('Add Food Manual'),
-            content: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  TextField(
-                    controller: nameCtrl,
-                    decoration: const InputDecoration(
-                      labelText: 'Food Name (e.g. Nasi Goreng)',
-                    ),
-                  ),
-                  TextField(
-                    controller: calCtrl,
-                    decoration: const InputDecoration(labelText: 'Calories'),
-                    keyboardType: TextInputType.number,
-                  ),
-                  const SizedBox(height: 16),
-                  InputDecorator(
-                    decoration: const InputDecoration(labelText: 'Meal Type'),
-                    child: DropdownButtonHideUnderline(
-                      child: DropdownButton<String>(
-                        value: selectedMeal,
-                        isDense: true,
-                        onChanged: (val) {
-                          if (val != null) {
-                            setState(() => selectedMeal = val);
-                          }
-                        },
-                        items: ['breakfast', 'lunch', 'dinner', 'snack'].map((
-                          String value,
-                        ) {
-                          return DropdownMenuItem<String>(
-                            value: value,
-                            child: Text(value.toUpperCase()),
-                          );
-                        }).toList(),
+            // 2. Macro Pie Chart (Interactive Visualization)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Card(
+                elevation: 4,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(24),
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    children: [
+                      const Text(
+                        'Daily Summary',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
-                    ),
+                      const SizedBox(height: 24),
+                      MacroPieChart(
+                        protein: totalProtein,
+                        carbs: totalCarbs,
+                        fat: totalFat,
+                        totalCalories: totalCalories,
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  const NutritionDetailScreen(),
+                            ),
+                          );
+                        },
+                      ),
+                      const SizedBox(height: 24),
+                      // Legend
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: [
+                          _buildLegendItem(
+                            'Protein',
+                            Colors.redAccent,
+                            '$totalProtein g',
+                          ),
+                          _buildLegendItem(
+                            'Carbs',
+                            Colors.blueAccent,
+                            '$totalCarbs g',
+                          ),
+                          _buildLegendItem(
+                            'Fat',
+                            Colors.orangeAccent,
+                            '$totalFat g',
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 24),
+
+            // 3. Meal Cards (Samsung Health Style)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Column(
+                children: [
+                  _buildMealCard(context, 'Breakfast', logs, ref),
+                  _buildMealCard(context, 'Lunch', logs, ref),
+                  _buildMealCard(context, 'Dinner', logs, ref),
+                  _buildMealCard(context, 'Snack', logs, ref),
                 ],
               ),
             ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(ctx),
-                child: const Text('Cancel'),
-              ),
-              ElevatedButton(
-                onPressed: () {
-                  if (nameCtrl.text.isEmpty || calCtrl.text.isEmpty) return;
 
-                  final log = FoodLog(
-                    userId: 'dummy-user-id', // Nanti ambil dari Auth Provider
-                    foodName: nameCtrl.text,
-                    calories: int.tryParse(calCtrl.text) ?? 0,
-                    mealType: selectedMeal,
-                    createdAt: DateTime.now(),
-                  );
-
-                  // Panggil Provider untuk simpan data
-                  ref.read(nutritionProvider.notifier).addLog(log);
-                  Navigator.pop(ctx);
-                },
-                child: const Text('Save'),
-              ),
-            ],
-          );
-        },
+            const SizedBox(height: 32),
+          ],
+        ),
       ),
     );
+  }
+
+  Widget _buildLegendItem(String label, Color color, String value) {
+    return Column(
+      children: [
+        Row(
+          children: [
+            Container(
+              width: 12,
+              height: 12,
+              decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+            ),
+            const SizedBox(width: 4),
+            Text(
+              label,
+              style: const TextStyle(fontSize: 12, color: Colors.grey),
+            ),
+          ],
+        ),
+        const SizedBox(height: 4),
+        Text(value, style: const TextStyle(fontWeight: FontWeight.bold)),
+      ],
+    );
+  }
+
+  Widget _buildMealCard(
+    BuildContext context,
+    String title,
+    List<FoodLog> logs,
+    WidgetRef ref,
+  ) {
+    final mealType = title.toLowerCase();
+    final mealLogs = logs.where((l) => l.mealType == mealType).toList();
+    final totalCalories = mealLogs.fold(0, (sum, item) => sum + item.calories);
+
+    return Card(
+      margin: const EdgeInsets.only(bottom: 12),
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(16),
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => MealDetailScreen(
+                mealType: mealType,
+                date: ref.read(nutritionProvider.notifier).selectedDate,
+              ),
+            ),
+          );
+        },
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).primaryColor.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(
+                  _getMealIcon(mealType),
+                  color: Theme.of(context).primaryColor,
+                  size: 24,
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      mealLogs.isEmpty
+                          ? 'No food logged'
+                          : '${mealLogs.length} items',
+                      style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                    ),
+                  ],
+                ),
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    '$totalCalories',
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const Text(
+                    'kcal',
+                    style: TextStyle(fontSize: 12, color: Colors.grey),
+                  ),
+                ],
+              ),
+              const SizedBox(width: 8),
+              const Icon(Icons.chevron_right, color: Colors.grey),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  IconData _getMealIcon(String mealType) {
+    switch (mealType) {
+      case 'breakfast':
+        return Icons.wb_sunny_outlined;
+      case 'lunch':
+        return Icons.restaurant;
+      case 'dinner':
+        return Icons.nights_stay_outlined;
+      case 'snack':
+        return Icons.local_cafe_outlined;
+      default:
+        return Icons.fastfood;
+    }
   }
 }

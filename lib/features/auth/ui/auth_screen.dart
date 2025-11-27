@@ -66,10 +66,8 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
       );
     }
 
-    // Check if the operation resulted in an error
     if (ref.read(authNotifierProvider).hasError) return;
 
-    // 👇 safeguard before using context
     if (!mounted) return;
 
     ScaffoldMessenger.of(context)
@@ -83,7 +81,6 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
         ),
       );
 
-    // Manually navigate to EmailConfirmationScreen if registering
     if (!_isLogin) {
       Navigator.push(
         context,
@@ -112,6 +109,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
               decoration: const InputDecoration(
                 labelText: 'Email',
                 hintText: 'Enter your email',
+                prefixIcon: Icon(Icons.email_outlined),
               ),
               validator: _validateEmail,
               keyboardType: TextInputType.emailAddress,
@@ -135,7 +133,6 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                                 emailController.text.trim(),
                               );
 
-                          // 👇 check both contexts before using
                           if (!mounted || !dialogContext.mounted) return;
 
                           Navigator.pop(dialogContext);
@@ -168,7 +165,10 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                   ? const SizedBox(
                       height: 20,
                       width: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2),
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
                     )
                   : const Text('Send Reset Link'),
             ),
@@ -211,8 +211,6 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
             MaterialPageRoute(builder: (context) => const DashboardScreen()),
           );
         } else if (_isLogin) {
-          // Only go to profile setup if logging in.
-          // If registering, _handleSubmit handles navigation to EmailConfirmationScreen
           Navigator.of(context).pushReplacement(
             MaterialPageRoute(builder: (context) => const ProfileSetupScreen()),
           );
@@ -221,132 +219,200 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
     });
 
     final authState = ref.watch(authNotifierProvider);
+    final theme = Theme.of(context);
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(_isLogin ? 'Login' : 'Register'),
-        centerTitle: true,
-      ),
-      body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24.0),
-            child: Form(
-              key: _formKey,
+      // Extend body behind app bar if we had one, but we'll use a custom header
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [theme.primaryColor, theme.colorScheme.secondary],
+            stops: const [0.0, 1.0],
+          ),
+        ),
+        child: SafeArea(
+          child: Center(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(24.0),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Icon(
-                    Icons.fitness_center,
-                    size: 80,
-                    color: Theme.of(context).primaryColor,
+                  // --- Logo / Icon ---
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.2),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.fitness_center,
+                      size: 64,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+
+                  // --- App Title ---
+                  Text(
+                    'GAINERS',
+                    style: theme.textTheme.displayMedium?.copyWith(
+                      color: Colors.white,
+                      letterSpacing: 2.0,
+                    ),
                   ),
                   const SizedBox(height: 48),
-                  if (!_isLogin)
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 16.0),
-                      child: TextFormField(
-                        controller: _usernameController,
-                        decoration: const InputDecoration(
-                          labelText: 'Username',
-                          hintText: 'Choose a username',
-                          prefixIcon: Icon(Icons.person),
-                        ),
-                        validator: _validateUsername,
-                        enabled: !authState.isLoading,
-                      ),
+
+                  // --- Auth Card ---
+                  Card(
+                    elevation: 8,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(24),
                     ),
-                  TextFormField(
-                    controller: _emailController,
-                    decoration: const InputDecoration(
-                      labelText: 'Email',
-                      hintText: 'Enter your email',
-                      prefixIcon: Icon(Icons.email),
-                    ),
-                    keyboardType: TextInputType.emailAddress,
-                    validator: _validateEmail,
-                    enabled: !authState.isLoading,
-                  ),
-                  const SizedBox(height: 16),
-                  TextFormField(
-                    controller: _passwordController,
-                    decoration: InputDecoration(
-                      labelText: 'Password',
-                      hintText: 'Enter your password',
-                      prefixIcon: const Icon(Icons.lock),
-                      suffixIcon: IconButton(
-                        icon: Icon(
-                          _obscurePassword
-                              ? Icons.visibility
-                              : Icons.visibility_off,
-                        ),
-                        onPressed: () {
-                          setState(() {
-                            _obscurePassword = !_obscurePassword;
-                          });
-                        },
-                      ),
-                    ),
-                    obscureText: _obscurePassword,
-                    validator: _validatePassword,
-                    enabled: !authState.isLoading,
-                  ),
-                  const SizedBox(height: 8),
-                  if (_isLogin)
-                    Align(
-                      alignment: Alignment.centerRight,
-                      child: TextButton(
-                        onPressed: authState.isLoading
-                            ? null
-                            : _showForgotPasswordDialog,
-                        child: const Text('Forgot Password?'),
-                      ),
-                    ),
-                  const SizedBox(height: 24),
-                  OutlinedButton.icon(
-                    onPressed: authState.isLoading
-                        ? null
-                        : () {
-                            ref
-                                .read(authNotifierProvider.notifier)
-                                .signInWithGoogle();
-                          },
-                    icon: Image.network(
-                      'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Google_%22G%22_logo.svg/1200px-Google_%22G%22_logo.svg.png',
-                      height: 24,
-                      width: 24,
-                      errorBuilder: (context, error, stackTrace) =>
-                          const Icon(Icons.login),
-                    ),
-                    label: const Text('Sign in with Google'),
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  ElevatedButton(
-                    onPressed: authState.isLoading ? null : _handleSubmit,
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                    ),
-                    child: authState.isLoading
-                        ? const SizedBox(
-                            height: 20,
-                            width: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              valueColor: AlwaysStoppedAnimation<Color>(
-                                Colors.white,
-                              ),
+                    child: Padding(
+                      padding: const EdgeInsets.all(32.0),
+                      child: Form(
+                        key: _formKey,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Text(
+                              _isLogin ? 'Welcome Back' : 'Create Account',
+                              style: theme.textTheme.headlineMedium,
+                              textAlign: TextAlign.center,
                             ),
-                          )
-                        : Text(
-                            _isLogin ? 'Login' : 'Register',
-                            style: const TextStyle(fontSize: 16),
-                          ),
+                            const SizedBox(height: 32),
+
+                            if (!_isLogin) ...[
+                              TextFormField(
+                                controller: _usernameController,
+                                decoration: const InputDecoration(
+                                  labelText: 'Username',
+                                  hintText: 'Choose a username',
+                                  prefixIcon: Icon(Icons.person_outline),
+                                ),
+                                validator: _validateUsername,
+                                enabled: !authState.isLoading,
+                              ),
+                              const SizedBox(height: 16),
+                            ],
+
+                            TextFormField(
+                              controller: _emailController,
+                              decoration: const InputDecoration(
+                                labelText: 'Email',
+                                hintText: 'Enter your email',
+                                prefixIcon: Icon(Icons.email_outlined),
+                              ),
+                              keyboardType: TextInputType.emailAddress,
+                              validator: _validateEmail,
+                              enabled: !authState.isLoading,
+                            ),
+                            const SizedBox(height: 16),
+
+                            TextFormField(
+                              controller: _passwordController,
+                              decoration: InputDecoration(
+                                labelText: 'Password',
+                                hintText: 'Enter your password',
+                                prefixIcon: const Icon(Icons.lock_outline),
+                                suffixIcon: IconButton(
+                                  icon: Icon(
+                                    _obscurePassword
+                                        ? Icons.visibility_outlined
+                                        : Icons.visibility_off_outlined,
+                                  ),
+                                  onPressed: () {
+                                    setState(() {
+                                      _obscurePassword = !_obscurePassword;
+                                    });
+                                  },
+                                ),
+                              ),
+                              obscureText: _obscurePassword,
+                              validator: _validatePassword,
+                              enabled: !authState.isLoading,
+                            ),
+
+                            const SizedBox(height: 12),
+
+                            if (_isLogin)
+                              Align(
+                                alignment: Alignment.centerRight,
+                                child: TextButton(
+                                  onPressed: authState.isLoading
+                                      ? null
+                                      : _showForgotPasswordDialog,
+                                  child: const Text('Forgot Password?'),
+                                ),
+                              ),
+
+                            const SizedBox(height: 24),
+
+                            ElevatedButton(
+                              onPressed: authState.isLoading
+                                  ? null
+                                  : _handleSubmit,
+                              child: authState.isLoading
+                                  ? const SizedBox(
+                                      height: 24,
+                                      width: 24,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        valueColor:
+                                            AlwaysStoppedAnimation<Color>(
+                                              Colors.white,
+                                            ),
+                                      ),
+                                    )
+                                  : Text(_isLogin ? 'LOGIN' : 'REGISTER'),
+                            ),
+
+                            const SizedBox(height: 24),
+
+                            const Row(
+                              children: [
+                                Expanded(child: Divider()),
+                                Padding(
+                                  padding: EdgeInsets.symmetric(horizontal: 16),
+                                  child: Text(
+                                    'OR',
+                                    style: TextStyle(color: Colors.grey),
+                                  ),
+                                ),
+                                Expanded(child: Divider()),
+                              ],
+                            ),
+
+                            const SizedBox(height: 24),
+
+                            OutlinedButton.icon(
+                              onPressed: authState.isLoading
+                                  ? null
+                                  : () {
+                                      ref
+                                          .read(authNotifierProvider.notifier)
+                                          .signInWithGoogle();
+                                    },
+                              icon: Image.network(
+                                'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Google_%22G%22_logo.svg/1200px-Google_%22G%22_logo.svg.png',
+                                height: 24,
+                                width: 24,
+                                errorBuilder: (context, error, stackTrace) =>
+                                    const Icon(Icons.login),
+                              ),
+                              label: const Text('Sign in with Google'),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
                   ),
-                  const SizedBox(height: 16),
+
+                  const SizedBox(height: 24),
+
+                  // --- Toggle Login/Register ---
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -354,6 +420,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                         _isLogin
                             ? "Don't have an account?"
                             : 'Already have an account?',
+                        style: const TextStyle(color: Colors.white70),
                       ),
                       TextButton(
                         onPressed: authState.isLoading
@@ -364,6 +431,12 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                                   _formKey.currentState?.reset();
                                 });
                               },
+                        style: TextButton.styleFrom(
+                          foregroundColor: Colors.white,
+                          textStyle: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                         child: Text(_isLogin ? 'Register' : 'Login'),
                       ),
                     ],
