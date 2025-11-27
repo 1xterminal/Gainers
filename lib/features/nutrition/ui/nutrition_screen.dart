@@ -4,7 +4,7 @@ import '../providers/nutrition_provider.dart';
 import '../data/food_model.dart';
 import 'meal_detail_screen.dart';
 import 'nutrition_detail_screen.dart';
-import 'widgets/horizontal_date_wheel.dart';
+import '../../../core/widgets/horizontal_date_wheel.dart';
 import 'widgets/macro_pie_chart.dart';
 
 class NutritionScreen extends ConsumerWidget {
