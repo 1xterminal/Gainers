@@ -3,6 +3,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gainers/features/profile/providers/profile_provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:gainers/features/dashboard/ui/widgets/dashboard_card.dart';
+import 'package:gainers/features/activity/ui/activity_details_screen.dart';
+import 'package:gainers/features/nutrition/ui/nutrition_screen.dart';
+import 'package:gainers/features/sleep/ui/sleep_log_screen.dart';
+import 'package:gainers/features/progress/ui/progress_screen.dart';
+import 'package:gainers/features/activity/providers/activity_details_provider.dart';
+import 'package:gainers/features/nutrition/providers/nutrition_provider.dart';
+import 'package:intl/intl.dart';
 
 class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
@@ -11,219 +18,430 @@ class DashboardScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final user = Supabase.instance.client.auth.currentUser;
     final profileAsync = ref.watch(getProfileProvider(user?.id ?? ''));
+    final healthAsync = ref.watch(healthProvider);
+    final nutritionAsync = ref.watch(nutritionProvider);
+    final theme = Theme.of(context);
 
-    // NOTE: No Scaffold here. Just the content.
-    return SafeArea(
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // --- GREETING SECTION ---
-            profileAsync.when(
-              data: (profile) {
-                // Prefer Display Name, fallback to Username, then generic
-                final name =
-                    profile?.displayName ?? profile?.username ?? 'Gainer';
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Good Morning,',
-                      style: Theme.of(
-                        context,
-                      ).textTheme.bodyLarge?.copyWith(color: Colors.grey[600]),
-                    ),
-                    Text(
-                      name,
-                      style: Theme.of(context).textTheme.headlineMedium
-                          ?.copyWith(fontWeight: FontWeight.bold),
-                    ),
-                  ],
-                );
-              },
-              loading: () => const SizedBox(
-                height: 50,
-                child: Center(child: CircularProgressIndicator()),
-              ),
-              error: (e, _) => const Text('Welcome back!'),
-            ),
+    // Calculate Nutrition Data
+    final int consumedCalories =
+        nutritionAsync.value?.fold<int>(
+          0,
+          (sum, item) => sum + item.calories,
+        ) ??
+        0;
+    const int targetCalories = 2500; // Hardcoded target for now
 
-            const SizedBox(height: 24),
+    // Calculate Activity Data
+    final int steps = healthAsync.value?.todaysSteps ?? 0;
+    final double distanceKm = (steps * 0.762) / 1000; // Approx 0.762m per step
+    final int burnedCalories = (steps * 0.04)
+        .round(); // Approx 0.04 kcal per step
+    final double stepProgress = (steps / 10000).clamp(
+      0.0,
+      1.0,
+    ); // Target 10,000 steps
 
-            // --- ACTIVITY CARD (Steps) ---
-            DashboardCard(
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const Scaffold(
-                      body: Center(
-                        child: Text("Activity Details - Coming Soon"),
-                      ),
-                    ),
-                  ),
-                );
-              },
-              child: Column(
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    return Scaffold(
+      body: CustomScrollView(
+        slivers: [
+          // --- Premium App Bar ---
+          SliverAppBar(
+            expandedHeight: 120.0,
+            floating: true,
+            pinned: true,
+            backgroundColor: theme.scaffoldBackgroundColor,
+            elevation: 0,
+            flexibleSpace: FlexibleSpaceBar(
+              titlePadding: const EdgeInsets.only(left: 24, bottom: 16),
+              title: profileAsync.when(
+                data: (profile) {
+                  final name =
+                      profile?.displayName ?? profile?.username ?? 'Gainer';
+                  return Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Steps',
-                        style: TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      Icon(Icons.directions_walk, color: Colors.orange),
-                    ],
-                  ),
-                  SizedBox(height: 16),
-                  Row(
-                    children: [
-                      SizedBox(
-                        width: 80,
-                        height: 80,
-                        child: CircularProgressIndicator(
-                          value: 0.65,
-                          strokeWidth: 8,
-                          backgroundColor: Colors.black12,
-                          color: Colors.orange,
+                        'Good Morning,',
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: Colors.grey[600],
+                          fontSize: 12,
                         ),
                       ),
-                      SizedBox(width: 24),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              '6,500 / 10,000',
-                              style: TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            SizedBox(height: 4),
-                            Text('🔥 320 kcal'),
-                            Text('📍 4.2 km'),
-                          ],
+                      Text(
+                        name,
+                        style: theme.textTheme.headlineSmall?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: theme.primaryColor,
                         ),
                       ),
                     ],
-                  ),
-                ],
+                  );
+                },
+                loading: () => const SizedBox.shrink(),
+                error: (_, __) => const Text('Welcome'),
               ),
             ),
+            actions: [
+              Padding(
+                padding: const EdgeInsets.only(right: 16.0),
+                child: CircleAvatar(
+                  backgroundColor: theme.primaryColor.withValues(alpha: 0.1),
+                  child: IconButton(
+                    icon: Icon(
+                      Icons.notifications_none,
+                      color: theme.primaryColor,
+                    ),
+                    onPressed: () {},
+                  ),
+                ),
+              ),
+            ],
+          ),
 
-            const SizedBox(height: 16),
+          // --- Dashboard Content ---
+          SliverPadding(
+            padding: const EdgeInsets.all(24.0),
+            sliver: SliverList(
+              delegate: SliverChildListDelegate([
+                // --- Activity Card (Featured) ---
+                DashboardCard(
+                  gradient: LinearGradient(
+                    colors: [theme.primaryColor, theme.colorScheme.secondary],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const ActivityDetailsScreen(),
+                      ),
+                    );
+                  },
+                  child: Column(
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text(
+                            'Daily Activity',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
+                          ),
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.2),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(
+                              Icons.directions_walk,
+                              color: Colors.white,
+                              size: 20,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 24),
+                      Row(
+                        children: [
+                          SizedBox(
+                            width: 100,
+                            height: 100,
+                            child: Stack(
+                              children: [
+                                Center(
+                                  child: CircularProgressIndicator(
+                                    value: stepProgress,
+                                    strokeWidth: 10,
+                                    backgroundColor: Colors.white.withValues(
+                                      alpha: 0.2,
+                                    ),
+                                    valueColor:
+                                        const AlwaysStoppedAnimation<Color>(
+                                          Colors.white,
+                                        ),
+                                  ),
+                                ),
+                                Center(
+                                  child: Text(
+                                    '${(stepProgress * 100).toInt()}%',
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 18,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(width: 24),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  NumberFormat('#,###').format(steps),
+                                  style: const TextStyle(
+                                    fontSize: 32,
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                                const Text(
+                                  'Steps Taken',
+                                  style: TextStyle(color: Colors.white70),
+                                ),
+                                const SizedBox(height: 8),
+                                Row(
+                                  children: [
+                                    const Icon(
+                                      Icons.local_fire_department,
+                                      color: Colors.white70,
+                                      size: 16,
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      '$burnedCalories kcal',
+                                      style: const TextStyle(
+                                        color: Colors.white70,
+                                        fontSize: 12,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 12),
+                                    const Icon(
+                                      Icons.location_on,
+                                      color: Colors.white70,
+                                      size: 16,
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      '${distanceKm.toStringAsFixed(1)} km',
+                                      style: const TextStyle(
+                                        color: Colors.white70,
+                                        fontSize: 12,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
 
-            // --- GRID FOR OTHER STATS ---
-            GridView.count(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              crossAxisCount: 2,
-              crossAxisSpacing: 16,
-              mainAxisSpacing: 16,
-              // Adjusted aspect ratio to prevent bottom overflow
-              childAspectRatio: 1.3,
-              children: [
-                DashboardCard(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const Scaffold(
-                          body: Center(child: Text("Nutrition - Coming Soon")),
-                        ),
-                      ),
-                    );
-                  },
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Icon(Icons.local_fire_department, color: Colors.red),
-                      Spacer(),
-                      Text('Calories', style: TextStyle(color: Colors.grey)),
-                      FittedBox(
-                        fit: BoxFit.scaleDown,
-                        child: Text(
-                          '1,200 / 2,500',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
+                const SizedBox(height: 24),
+
+                // --- Stats Grid ---
+                GridView.count(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  crossAxisCount: 2,
+                  crossAxisSpacing: 16,
+                  mainAxisSpacing: 16,
+                  childAspectRatio: 1.1,
+                  children: [
+                    DashboardCard(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const NutritionScreen(),
                           ),
-                        ),
+                        );
+                      },
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              color: Colors.orange.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: const Icon(
+                              Icons.lunch_dining,
+                              color: Colors.orange,
+                            ),
+                          ),
+                          const Spacer(),
+                          Text(
+                            'Calories',
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              color: Colors.grey,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          RichText(
+                            text: TextSpan(
+                              style: theme.textTheme.titleLarge?.copyWith(
+                                fontWeight: FontWeight.bold,
+                              ),
+                              children: [
+                                TextSpan(
+                                  text: NumberFormat(
+                                    '#,###',
+                                  ).format(consumedCalories),
+                                ),
+                                TextSpan(
+                                  text: ' / $targetCalories',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: Colors.grey[400],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
+                    ),
+                    DashboardCard(
+                      onTap: () {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Hydration feature coming soon!'),
+                          ),
+                        );
+                      },
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              color: Colors.blue.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: const Icon(
+                              Icons.water_drop,
+                              color: Colors.blue,
+                            ),
+                          ),
+                          const Spacer(),
+                          Text(
+                            'Hydration',
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              color: Colors.grey,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          RichText(
+                            text: TextSpan(
+                              style: theme.textTheme.titleLarge?.copyWith(
+                                fontWeight: FontWeight.bold,
+                              ),
+                              children: [
+                                const TextSpan(text: '1.2L'),
+                                TextSpan(
+                                  text: ' / 2.5L',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    color: Colors.grey[400],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    DashboardCard(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const SleepLogScreen(),
+                          ),
+                        );
+                      },
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              color: Colors.purple.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: const Icon(
+                              Icons.bedtime,
+                              color: Colors.purple,
+                            ),
+                          ),
+                          const Spacer(),
+                          Text(
+                            'Sleep',
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              color: Colors.grey,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            '7h 30m',
+                            style: theme.textTheme.titleLarge?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    DashboardCard(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const ProgressScreen(),
+                          ),
+                        );
+                      },
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              color: Colors.teal.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: const Icon(
+                              Icons.monitor_weight,
+                              color: Colors.teal,
+                            ),
+                          ),
+                          const Spacer(),
+                          Text(
+                            'Weight',
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              color: Colors.grey,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            '${profileAsync.value?.weightKg ?? '--'} kg',
+                            style: theme.textTheme.titleLarge?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
-                DashboardCard(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const Scaffold(
-                          body: Center(child: Text("Hydration - Coming Soon")),
-                        ),
-                      ),
-                    );
-                  },
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Icon(Icons.water_drop, color: Colors.blue),
-                      Spacer(),
-                      Text('Hydration', style: TextStyle(color: Colors.grey)),
-                      FittedBox(
-                        fit: BoxFit.scaleDown,
-                        child: Text(
-                          '4 / 8 Glasses',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                DashboardCard(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const Scaffold(
-                          body: Center(
-                            child: Text("Activity Details - Coming Soon"),
-                          ),
-                        ),
-                      ),
-                    );
-                  },
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Icon(Icons.bedtime, color: Colors.deepPurple),
-                      Spacer(),
-                      Text('Sleep', style: TextStyle(color: Colors.grey)),
-                      FittedBox(
-                        fit: BoxFit.scaleDown,
-                        child: Text(
-                          '7h 30m',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
+
+                const SizedBox(height: 80), // Bottom padding for FAB if needed
+              ]),
             ),
-            // Add padding at bottom so the Navbar doesn't cover the last cards
-            const SizedBox(height: 20),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
