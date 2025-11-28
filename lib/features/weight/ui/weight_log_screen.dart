@@ -6,16 +6,19 @@ import "package:supabase_flutter/supabase_flutter.dart";
 import "../providers/weight_provider.dart";
 import "../data/weight_model.dart";
 
-class WeightLogPage extends ConsumerWidget {
-  const WeightLogPage({super.key});
+class WeightLogScreen extends ConsumerStatefulWidget {
+  const WeightLogScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<WeightLogScreen> createState() => _WeightLogScreenState();
+}
+
+class _WeightLogScreenState extends ConsumerState<WeightLogScreen> {
+  @override
+  Widget build(BuildContext context) {
     final weightLogs = ref.watch(weightLogsProvider);
 
     final logs = weightLogs.value ?? [];
-
-    print(logs.length);
 
     if (logs.isEmpty) {
       return const Center(child: Text('Weight Logs are empty'));
@@ -29,46 +32,54 @@ class WeightLogPage extends ConsumerWidget {
       return const Center(child: CircularProgressIndicator());
     }
 
-    return ListView.separated(
-      itemCount: logs.length,
-      separatorBuilder: (context, index) => const Divider(
-        height: 1,
-        indent: 16,
-        color: Color.fromARGB(64, 128, 128, 128),
-        endIndent: 16,
-      ),
-      itemBuilder: (context, index) => Dismissible(
-        key: Key(logs[index].id.toString()),
-        direction: DismissDirection.endToStart,
-        background: Container(
-          color: Colors.red,
-          alignment: Alignment.centerRight,
-          padding: const EdgeInsets.only(right: 20),
-          child: const Icon(Icons.delete, color: Colors.white),
-        ),
-        onDismissed: (direction) {
-          if (logs[index].id != null) {
-            ref.read(weightLogsProvider.notifier).deleteLog(logs[index].id!);
-            ScaffoldMessenger.of(
-              context,
-            ).showSnackBar(SnackBar(content: Text('Log successfully deleted')));
-          }
-        },
-        child: ListTile(
-          title: Text(
-            '${logs[index].weight_kg} kg',
-            style: TextStyle(fontWeight: FontWeight.bold),
-          ),
-          trailing: Text(
-            DateFormat('dd MMM yyyy').format(logs[index].createdAt),
-          ),
-          onTap: () => showModalSheet(context, ref, log: logs[index]),
-        ),
-      ),
-    );
+    return Scaffold(
+			appBar: AppBar(title: const Text('Weight Logs')),
+			body: ListView.separated(
+				itemCount: logs.length,
+				separatorBuilder: (context, index) => const Divider(
+					height: 1,
+					indent: 16,
+					color: Color.fromARGB(64, 128, 128, 128),
+					endIndent: 16,
+				),
+				itemBuilder: (context, index) => Dismissible(
+					key: Key(logs[index].id.toString()),
+					direction: DismissDirection.endToStart,
+					background: Container(
+						color: Colors.red,
+						alignment: Alignment.centerRight,
+						padding: const EdgeInsets.only(right: 20),
+						child: const Icon(Icons.delete, color: Colors.white),
+					),
+					onDismissed: (direction) {
+						if (logs[index].id != null) {
+							ref.read(weightLogsProvider.notifier).deleteLog(logs[index].id!);
+							ScaffoldMessenger.of(
+								context,
+							).showSnackBar(SnackBar(content: Text('Log successfully deleted')));
+						}
+					},
+					child: ListTile(
+						title: Text(
+							'${logs[index].weight_kg} kg',
+							style: TextStyle(fontWeight: FontWeight.bold),
+						),
+						trailing: Text(
+							DateFormat('dd MMM yyyy').format(logs[index].createdAt),
+						),
+						onTap: () => _showModalSheet(context, ref, log: logs[index]),
+					),
+				),
+			),
+			floatingActionButton: FloatingActionButton(
+          onPressed: () => _showModalSheet(context, ref),
+          tooltip: 'Add Weight',
+          child: const Icon(Icons.add),
+        )
+		);
   }
 
-  void showModalSheet(BuildContext context, WidgetRef ref, {WeightLog? log}) {
+  void _showModalSheet(BuildContext context, WidgetRef ref, {WeightLog? log}) {
     final weightCtrl = TextEditingController(
       text: log?.weight_kg.toString() ?? '',
     );
