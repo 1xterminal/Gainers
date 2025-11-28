@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import '../providers/hydration_provider.dart';
 import 'widgets/wave_progress_widget.dart';
 import '../../../core/widgets/horizontal_date_wheel.dart';
+import 'hydration_edit_screen.dart';
 
 class HydrationScreen extends ConsumerWidget {
   const HydrationScreen({super.key});
@@ -306,6 +307,15 @@ class HydrationScreen extends ConsumerWidget {
                                 notifier.deleteLog(log.id);
                               },
                               child: ListTile(
+                                onTap: () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) =>
+                                          HydrationEditScreen(log: log),
+                                    ),
+                                  );
+                                },
                                 contentPadding: EdgeInsets.zero,
                                 leading: Container(
                                   padding: const EdgeInsets.all(10),

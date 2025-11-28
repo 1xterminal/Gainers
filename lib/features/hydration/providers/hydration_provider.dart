@@ -40,6 +40,14 @@ class HydrationNotifier extends AsyncNotifier<List<HydrationLog>> {
     });
   }
 
+  Future<void> updateLog(HydrationLog log) async {
+    state = const AsyncValue.loading();
+    state = await AsyncValue.guard(() async {
+      await _repo.updateLog(log);
+      return _loadLogs();
+    });
+  }
+
   Future<void> deleteLog(String id) async {
     state = const AsyncValue.loading();
     state = await AsyncValue.guard(() async {

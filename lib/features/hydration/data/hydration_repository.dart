@@ -27,6 +27,21 @@ class HydrationRepository {
     await prefs.setStringList(_storageKey, logsJson);
   }
 
+  Future<void> updateLog(HydrationLog updatedLog) async {
+    final prefs = await SharedPreferences.getInstance();
+    final List<String> logsJson = prefs.getStringList(_storageKey) ?? [];
+
+    final updatedLogsJson = logsJson.map((logJson) {
+      final log = HydrationLog.fromJson(logJson);
+      if (log.id == updatedLog.id) {
+        return updatedLog.toJson();
+      }
+      return logJson;
+    }).toList();
+
+    await prefs.setStringList(_storageKey, updatedLogsJson);
+  }
+
   Future<void> deleteLog(String id) async {
     final prefs = await SharedPreferences.getInstance();
     final List<String> logsJson = prefs.getStringList(_storageKey) ?? [];
