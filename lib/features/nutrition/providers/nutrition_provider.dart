@@ -48,6 +48,14 @@ class NutritionNotifier extends AsyncNotifier<List<FoodLog>> {
       return _loadFoodLogs();
     });
   }
+
+  Future<void> updateLog(FoodLog log) async {
+    state = const AsyncValue.loading();
+    state = await AsyncValue.guard(() async {
+      await _repo.updateFoodLog(log);
+      return _loadFoodLogs();
+    });
+  }
 }
 
 // 3. Provider Utama yang akan dipanggil di UI

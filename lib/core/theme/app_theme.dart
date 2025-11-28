@@ -153,7 +153,7 @@ class AppTheme {
       BarChartTheme(
         barColor: _lightPrimary,
         barBackgroundColor: _lightPrimary.withValues(alpha: 0.1),
-        gridColor: Colors.grey.withValues(alpha: 0.2),
+        gridColor: Colors.white,
         toolTipColor: _lightSecondary,
         labelStyle: const TextStyle(
           color: _lightPrimary,
@@ -259,19 +259,17 @@ class AppTheme {
       ),
     ),
 
-    // Floating Action Button
     floatingActionButtonTheme: const FloatingActionButtonThemeData(
       backgroundColor: _darkSecondary,
       foregroundColor: Colors.black,
       elevation: 6,
     ),
 
-    // Extensions
     extensions: <ThemeExtension<dynamic>>[
       BarChartTheme(
         barColor: _darkPrimary,
         barBackgroundColor: _darkPrimary.withValues(alpha: 0.1),
-        gridColor: Colors.white10,
+        gridColor: _darkSurface,
         toolTipColor: _darkSecondary,
         labelStyle: const TextStyle(
           color: _darkPrimary,
