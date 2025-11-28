@@ -1,17 +1,25 @@
 import 'package:flutter/material.dart';
-import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:gainers/features/activity/data/models/step_data.dart';
 import 'package:gainers/features/activity/providers/activity_details_provider.dart';
+import 'package:gainers/features/activity/ui/widgets/activity_bar_chart.dart';
+import 'package:gainers/features/activity/ui/widgets/activity_cards.dart';
 import 'package:gainers/core/theme/app_theme.dart';
 
-class ActivityDetailsScreen extends ConsumerWidget {
+class ActivityDetailsScreen extends ConsumerStatefulWidget {
   const ActivityDetailsScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<ActivityDetailsScreen> createState() =>
+      _ActivityDetailsScreenState();
+}
+
+class _ActivityDetailsScreenState extends ConsumerState<ActivityDetailsScreen> {
+  int _selectedIndex = -1;
+
+  @override
+  Widget build(BuildContext context) {
     //watch health provider to get the data
     final asyncHealthState = ref.watch(healthProvider);
 
@@ -22,6 +30,7 @@ class ActivityDetailsScreen extends ConsumerWidget {
       loading: () =>
           const Scaffold(body: Center(child: CircularProgressIndicator())),
 
+      //error handling
       error: (e, stack) {
         final errorText = e.toString();
         final isPermissionDenied = errorText.contains('Permanently Denied!');
@@ -76,15 +85,25 @@ class ActivityDetailsScreen extends ConsumerWidget {
         final lastSevenDays = healthStats.weeklyData;
         final stepsToday = healthStats.todaysSteps;
 
-        //calculate total steps for the last 7 days
-        final int totalStepsSeven = lastSevenDays.fold(
-          0,
-          (sum, item) => sum + item.steps,
-        );
+        int stepsShown;
+        double distanceShown;
+        double caloriesShown;
+        String titleString;
 
-        //calculate total distance for today, last 7 days, and lifetime
-        final double totalDistanceToday = stepsToday * 0.0003048;
-        final double totalDistanceSeven = totalStepsSeven * 0.0003048;
+        if (_selectedIndex == -1 ||
+            _selectedIndex == lastSevenDays.length - 1) {
+          stepsShown = stepsToday;
+          distanceShown = stepsShown * 0.0003048;
+          caloriesShown = stepsShown * 0.04;
+          titleString = 'Today';
+        } else {
+          final selectedData = lastSevenDays[_selectedIndex];
+          stepsShown = selectedData.steps;
+          distanceShown = stepsShown * 0.0003048;
+          caloriesShown = stepsShown * 0.04;
+          titleString = DateFormat('MMMM d, yyyy').format(selectedData.date);
+        }
+
         final double totalDistanceLifetime =
             healthStats.lifetimeSteps * 0.0003048;
 
@@ -120,15 +139,23 @@ class ActivityDetailsScreen extends ConsumerWidget {
                 const SizedBox(height: 24),
 
                 Container(
-                  height: 290,
-                  padding: const EdgeInsets.only(right: 16, left: 16, top: 10),
-                  child: _buildBarChart(lastSevenDays, barTheme),
+                  height: 200,
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  child: ActivityBarChart(
+                    data: lastSevenDays,
+                    selectedIndex: _selectedIndex,
+                    onBarSelected: (index) {
+                      setState(() {
+                        _selectedIndex = index;
+                      });
+                    },
+                  ),
                 ),
                 const SizedBox(height: 40),
 
                 // -- today's stats --
                 Text(
-                  'Today\'s Stats',
+                  titleString,
                   style: barTheme.labelStyle.copyWith(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
@@ -136,59 +163,11 @@ class ActivityDetailsScreen extends ConsumerWidget {
                 ),
                 const SizedBox(height: 16),
 
-                Row(
-                  children: [
-                    _buildInfoCard(
-                      title: 'Total Steps',
-                      value: NumberFormat('#,###').format(stepsToday),
-                      icon: Icons.directions_run,
-                      iconColor: barTheme.barColor,
-                      cardColor: barTheme.gridColor,
-                      textColor: barTheme.labelStyle.color!,
-                    ),
-                    const SizedBox(width: 16),
-                    _buildInfoCard(
-                      title: 'Total Distance (km)',
-                      value: NumberFormat('#,###').format(totalDistanceToday),
-                      icon: Icons.arrow_circle_right_outlined,
-                      iconColor: barTheme.barColor,
-                      cardColor: barTheme.gridColor,
-                      textColor: barTheme.labelStyle.color!,
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 40),
-
-                // -- weekly stats --
-                Text(
-                  'Weekly Stats',
-                  style: barTheme.labelStyle.copyWith(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 16),
-
-                Row(
-                  children: [
-                    _buildInfoCard(
-                      title: 'Total Steps',
-                      value: NumberFormat('#,###').format(totalStepsSeven),
-                      icon: Icons.directions_run,
-                      iconColor: barTheme.barColor,
-                      cardColor: barTheme.gridColor,
-                      textColor: barTheme.labelStyle.color!,
-                    ),
-                    const SizedBox(width: 16),
-                    _buildInfoCard(
-                      title: 'Total Distance (km)',
-                      value: NumberFormat('#,###').format(totalDistanceSeven),
-                      icon: Icons.arrow_circle_right_outlined,
-                      iconColor: barTheme.barColor,
-                      cardColor: barTheme.gridColor,
-                      textColor: barTheme.labelStyle.color!,
-                    ),
-                  ],
+                ActivityCards.buildSingleInfoCard(
+                  context,
+                  steps: stepsShown,
+                  distance: distanceShown,
+                  calories: caloriesShown,
                 ),
                 const SizedBox(height: 40),
 
@@ -204,7 +183,7 @@ class ActivityDetailsScreen extends ConsumerWidget {
 
                 Row(
                   children: [
-                    _buildInfoCard(
+                    ActivityCards.buildDoubleInfoCard(
                       title: 'Total Steps',
                       value: NumberFormat(
                         '#,###',
@@ -215,7 +194,7 @@ class ActivityDetailsScreen extends ConsumerWidget {
                       textColor: barTheme.labelStyle.color!,
                     ),
                     const SizedBox(width: 16),
-                    _buildInfoCard(
+                    ActivityCards.buildDoubleInfoCard(
                       title: 'Total Distance (km)',
                       value: NumberFormat(
                         '#,###',
@@ -232,154 +211,6 @@ class ActivityDetailsScreen extends ConsumerWidget {
           ),
         );
       },
-    );
-  }
-
-  //helper function to build the bar chart
-  Widget _buildBarChart(List<StepData> data, BarChartTheme barTheme) {
-    double maxSteps = 0;
-    for (var i in data) {
-      if (i.steps > maxSteps) maxSteps = i.steps.toDouble();
-    }
-
-    return BarChart(
-      BarChartData(
-        alignment: BarChartAlignment.center,
-        maxY: 12000,
-
-        barTouchData: BarTouchData(
-          enabled: true,
-          touchExtraThreshold: const EdgeInsets.symmetric(horizontal: 8),
-          touchTooltipData: BarTouchTooltipData(
-            fitInsideVertically: true,
-            getTooltipColor: (group) => barTheme.toolTipColor,
-            getTooltipItem: (group, groupIndex, rod, rodIndex) {
-              return BarTooltipItem(
-                '${rod.toY.round()}\nSteps',
-                const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 14,
-                ),
-              );
-            },
-          ),
-        ),
-
-        titlesData: FlTitlesData(
-          topTitles: const AxisTitles(
-            sideTitles: SideTitles(showTitles: false),
-          ),
-          rightTitles: const AxisTitles(
-            sideTitles: SideTitles(showTitles: false),
-          ),
-          leftTitles: const AxisTitles(
-            sideTitles: SideTitles(showTitles: false),
-          ),
-
-          bottomTitles: AxisTitles(
-            sideTitles: SideTitles(
-              showTitles: true,
-              reservedSize: 30,
-              getTitlesWidget: (double value, TitleMeta meta) {
-                final index = value.toInt();
-                if (index >= 0 && index < data.length) {
-                  final date = data[index].date;
-                  return Padding(
-                    padding: const EdgeInsets.only(top: 8.0),
-                    child: Text(
-                      DateFormat.E().format(date),
-                      style: barTheme.labelStyle,
-                    ),
-                  );
-                }
-                return const Text('');
-              },
-            ),
-          ),
-        ),
-
-        gridData: const FlGridData(show: false),
-        borderData: FlBorderData(show: false),
-
-        barGroups: data.asMap().entries.map((entry) {
-          int index = entry.key;
-          StepData stepData = entry.value;
-
-          final double visualHeight = stepData.steps > 12000
-              ? 12000
-              : stepData.steps.toDouble();
-
-          return BarChartGroupData(
-            x: index,
-            barRods: [
-              BarChartRodData(
-                toY: visualHeight,
-                color: barTheme.barColor,
-                width: 20,
-                borderRadius: BorderRadius.circular(5),
-                backDrawRodData: BackgroundBarChartRodData(
-                  show: true,
-                  toY: 12000,
-                  color: barTheme.barBackgroundColor,
-                ),
-              ),
-            ],
-          );
-        }).toList(),
-      ),
-    );
-  }
-
-  //helper function to build the info card
-  Widget _buildInfoCard({
-    required String title,
-    required String value,
-    required IconData icon,
-    required Color iconColor,
-    required Color cardColor,
-    required Color textColor,
-  }) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: cardColor,
-          borderRadius: BorderRadius.circular(20),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.blueGrey.withValues(alpha: 0.2),
-              offset: const Offset(0, 2),
-              blurRadius: 5,
-            ),
-          ],
-        ),
-
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: iconColor.withValues(alpha: 1),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(icon, color: Colors.white, size: 24),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              value,
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: textColor,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(title, style: TextStyle(color: textColor, fontSize: 14)),
-          ],
-        ),
-      ),
     );
   }
 }
