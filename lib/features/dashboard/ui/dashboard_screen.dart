@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gainers/features/profile/providers/profile_provider.dart';
+import 'package:gainers/features/weight/ui/weight_log_screen.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:gainers/features/dashboard/ui/widgets/dashboard_card.dart';
 import 'package:gainers/features/activity/ui/activity_details_screen.dart';
 import 'package:gainers/features/nutrition/ui/nutrition_screen.dart';
 import 'package:gainers/features/sleep/ui/sleep_log_screen.dart';
-import 'package:gainers/features/progress/ui/progress_screen.dart';
 import 'package:gainers/features/activity/providers/activity_details_provider.dart';
 import 'package:gainers/features/nutrition/providers/nutrition_provider.dart';
 import 'package:intl/intl.dart';
@@ -399,7 +399,7 @@ class DashboardScreen extends ConsumerWidget {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => const ProgressScreen(),
+                            builder: (context) => const WeightLogScreen(),
                           ),
                         );
                       },
