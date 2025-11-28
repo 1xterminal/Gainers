@@ -61,3 +61,22 @@ final hydrationProvider =
     AsyncNotifierProvider<HydrationNotifier, List<HydrationLog>>(() {
       return HydrationNotifier();
     });
+
+final dailyTargetProvider = AsyncNotifierProvider<DailyTargetNotifier, int>(() {
+  return DailyTargetNotifier();
+});
+
+class DailyTargetNotifier extends AsyncNotifier<int> {
+  late final HydrationRepository _repo;
+
+  @override
+  Future<int> build() async {
+    _repo = ref.read(hydrationRepositoryProvider);
+    return _repo.getDailyTarget();
+  }
+
+  Future<void> setTarget(int target) async {
+    await _repo.setDailyTarget(target);
+    state = AsyncValue.data(target);
+  }
+}

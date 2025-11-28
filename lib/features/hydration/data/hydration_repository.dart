@@ -3,6 +3,7 @@ import 'hydration_model.dart';
 
 class HydrationRepository {
   static const String _storageKey = 'hydration_logs';
+  static const String _dailyTargetKey = 'hydration_daily_target';
 
   Future<List<HydrationLog>> getLogs(DateTime date) async {
     final prefs = await SharedPreferences.getInstance();
@@ -46,11 +47,21 @@ class HydrationRepository {
     final prefs = await SharedPreferences.getInstance();
     final List<String> logsJson = prefs.getStringList(_storageKey) ?? [];
 
-    final updatedLogs = logsJson.where((logStr) {
-      final log = HydrationLog.fromJson(logStr);
+    final updatedLogsJson = logsJson.where((logJson) {
+      final log = HydrationLog.fromJson(logJson);
       return log.id != id;
     }).toList();
 
-    await prefs.setStringList(_storageKey, updatedLogs);
+    await prefs.setStringList(_storageKey, updatedLogsJson);
+  }
+
+  Future<void> setDailyTarget(int target) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt(_dailyTargetKey, target);
+  }
+
+  Future<int> getDailyTarget() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getInt(_dailyTargetKey) ?? 2000;
   }
 }

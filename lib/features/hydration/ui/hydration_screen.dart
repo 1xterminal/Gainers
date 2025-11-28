@@ -5,6 +5,7 @@ import '../providers/hydration_provider.dart';
 import 'widgets/wave_progress_widget.dart';
 import '../../../core/widgets/horizontal_date_wheel.dart';
 import 'hydration_edit_screen.dart';
+import 'hydration_target_screen.dart';
 
 class HydrationScreen extends ConsumerWidget {
   const HydrationScreen({super.key});
@@ -14,8 +15,8 @@ class HydrationScreen extends ConsumerWidget {
     final hydrationState = ref.watch(hydrationProvider);
     final notifier = ref.read(hydrationProvider.notifier);
     final selectedDate = ref.watch(hydrationProvider.notifier).selectedDate;
-
-    const int dailyTarget = 2000; // ml
+    final dailyTargetAsync = ref.watch(dailyTargetProvider);
+    final dailyTarget = dailyTargetAsync.value ?? 2000;
 
     return Scaffold(
       appBar: AppBar(
@@ -71,25 +72,44 @@ class HydrationScreen extends ConsumerWidget {
                       ),
                     ),
                     const SizedBox(height: 8),
-                    RichText(
-                      text: TextSpan(
-                        style: Theme.of(context).textTheme.headlineMedium
-                            ?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              color: Theme.of(context).primaryColor,
-                            ),
-                        children: [
-                          TextSpan(text: '$totalIntake'),
-                          TextSpan(
-                            text: ' / $dailyTarget ml',
-                            style: TextStyle(
-                              fontSize: 18,
-                              color: Colors.grey[400],
-                              fontWeight: FontWeight.normal,
-                            ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        RichText(
+                          text: TextSpan(
+                            style: Theme.of(context).textTheme.headlineMedium
+                                ?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  color: Theme.of(context).primaryColor,
+                                ),
+                            children: [
+                              TextSpan(text: '$totalIntake'),
+                              TextSpan(
+                                text: ' / $dailyTarget ml',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  color: Colors.grey[400],
+                                  fontWeight: FontWeight.normal,
+                                ),
+                              ),
+                            ],
                           ),
-                        ],
-                      ),
+                        ),
+                        const SizedBox(width: 8),
+                        IconButton(
+                          icon: const Icon(Icons.edit_outlined, size: 20),
+                          color: Colors.grey[400],
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    const HydrationTargetScreen(),
+                              ),
+                            );
+                          },
+                        ),
+                      ],
                     ),
                   ],
                 ),
