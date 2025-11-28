@@ -57,8 +57,7 @@ class WeightLogPage extends ConsumerWidget {
         child: ListTile(
           title: Text(
             '${logs[index].weight_kg} kg',
-            style: TextStyle(fontWeight: FontWeight.b
-						old),
+            style: TextStyle(fontWeight: FontWeight.bold),
           ),
           trailing: Text(
             DateFormat('dd MMM yyyy').format(logs[index].createdAt),
