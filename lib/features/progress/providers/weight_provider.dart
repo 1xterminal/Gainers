@@ -38,6 +38,14 @@ class WeightProvider extends AsyncNotifier<List<WeightLog>> {
     });
   }
 
+	Future<void> updateLog(WeightLog log) async {
+		state = const AsyncValue.loading();
+		state = await AsyncValue.guard(() async {
+			await _repo.updateWeightLog(log);
+			return _loadWeightLogs();
+		});
+	}
+
   Future<void> deleteLog(int id) async {
     state = const AsyncValue.loading();
     state = await AsyncValue.guard(() async {
