@@ -9,6 +9,8 @@ import 'package:gainers/features/nutrition/ui/nutrition_screen.dart';
 import 'package:gainers/features/sleep/ui/sleep_log_screen.dart';
 import 'package:gainers/features/activity/providers/activity_details_provider.dart';
 import 'package:gainers/features/nutrition/providers/nutrition_provider.dart';
+import 'package:gainers/features/hydration/providers/hydration_provider.dart';
+import 'package:gainers/features/hydration/ui/hydration_screen.dart';
 import 'package:intl/intl.dart';
 
 class DashboardScreen extends ConsumerWidget {
@@ -20,6 +22,7 @@ class DashboardScreen extends ConsumerWidget {
     final profileAsync = ref.watch(getProfileProvider(user?.id ?? ''));
     final healthAsync = ref.watch(healthProvider);
     final nutritionAsync = ref.watch(nutritionProvider);
+    final hydrationAsync = ref.watch(hydrationProvider);
     final theme = Theme.of(context);
 
     // Calculate Nutrition Data
@@ -306,9 +309,10 @@ class DashboardScreen extends ConsumerWidget {
                     ),
                     DashboardCard(
                       onTap: () {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Hydration feature coming soon!'),
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const HydrationScreen(),
                           ),
                         );
                       },
@@ -334,22 +338,35 @@ class DashboardScreen extends ConsumerWidget {
                             ),
                           ),
                           const SizedBox(height: 4),
-                          RichText(
-                            text: TextSpan(
-                              style: theme.textTheme.titleLarge?.copyWith(
-                                fontWeight: FontWeight.bold,
-                              ),
-                              children: [
-                                const TextSpan(text: '1.2L'),
-                                TextSpan(
-                                  text: ' / 2.5L',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    color: Colors.grey[400],
+                          hydrationAsync.when(
+                            data: (logs) {
+                              final total = logs.fold(
+                                0,
+                                (sum, item) => sum + item.amount,
+                              );
+                              return RichText(
+                                text: TextSpan(
+                                  style: theme.textTheme.titleLarge?.copyWith(
+                                    fontWeight: FontWeight.bold,
                                   ),
+                                  children: [
+                                    TextSpan(
+                                      text:
+                                          '${(total / 1000).toStringAsFixed(1)}L',
+                                    ),
+                                    TextSpan(
+                                      text: ' / 2.0L',
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        color: Colors.grey[400],
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                              ],
-                            ),
+                              );
+                            },
+                            loading: () => const Text('Loading...'),
+                            error: (_, __) => const Text('--'),
                           ),
                         ],
                       ),
