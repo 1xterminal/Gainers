@@ -12,12 +12,15 @@ final youtubeApiProvider = Provider<YoutubeAPI>((ref) {
 //provider to get exercise video based on search query
 final exerciseVideoProvider = FutureProvider.family<List<FitnessVideo>, String>(
   (ref, query) async {
-    if (query.isEmpty) return [];
-
     final api = ref.read(youtubeApiProvider);
 
-    //add 'fitness tutorial' to the search query
-    final searchString = '$query fitness tutorial';
+    String searchString;
+
+    if (query.isEmpty) {
+      searchString = 'popular fitness workout exercises';
+    } else {
+      searchString = '$query fitness tutorial';
+    }
 
     final results = await api.search(searchString);
 

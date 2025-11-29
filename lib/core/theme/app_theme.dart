@@ -153,13 +153,14 @@ class AppTheme {
       BarChartTheme(
         barColor: _lightPrimary,
         barBackgroundColor: _lightPrimary.withValues(alpha: 0.1),
-        gridColor: Colors.grey.withValues(alpha: 0.2),
+        gridColor: Colors.white,
         toolTipColor: _lightSecondary,
         labelStyle: const TextStyle(
           color: _lightPrimary,
           fontSize: 12,
           fontWeight: FontWeight.bold,
         ),
+        greenBars: const Color.fromARGB(255, 16, 126, 99),
       ),
     ],
   );
@@ -269,13 +270,14 @@ class AppTheme {
       BarChartTheme(
         barColor: _darkPrimary,
         barBackgroundColor: _darkPrimary.withValues(alpha: 0.1),
-        gridColor: Colors.white10,
+        gridColor: _darkSurface,
         toolTipColor: _darkSecondary,
         labelStyle: const TextStyle(
           color: _darkPrimary,
           fontSize: 12,
           fontWeight: FontWeight.bold,
         ),
+        greenBars: const Color.fromARGB(255, 46, 157, 130),
       ),
     ],
   );
