@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import '../../../core/widgets/horizontal_date_wheel.dart';
 import '../providers/sleep_provider.dart';
 import 'widgets/sleep_input_modal.dart';
+import 'widgets/sleep_debt_card.dart';
 
 class SleepLogScreen extends ConsumerStatefulWidget {
   const SleepLogScreen({super.key});
@@ -18,6 +19,7 @@ class _SleepLogScreenState extends ConsumerState<SleepLogScreen> {
     final sleepState = ref.watch(sleepProvider);
     final notifier = ref.read(sleepProvider.notifier);
     final selectedDate = ref.watch(sleepProvider.notifier).selectedDate;
+    final weeklyLogsAsync = ref.watch(weeklySleepLogsProvider(selectedDate));
 
     final dailyLogs = sleepState.value ?? [];
     
@@ -152,6 +154,30 @@ class _SleepLogScreenState extends ConsumerState<SleepLogScreen> {
                         ],
                       ],
                     ),
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  // Sleep Debt Tracker
+                  weeklyLogsAsync.when(
+                    data: (weeklyLogs) {
+                      // Calculate sleep debt (recommended 8h/night)
+                      const recommendedHoursPerNight = 8.0;
+                      final totalDays = 7;
+                      final totalRecommendedMinutes = (recommendedHoursPerNight * 60 * totalDays).toInt();
+                      
+                      final totalActualMinutes = weeklyLogs.fold<int>(
+                        0,
+                        (sum, log) => sum + log.durationMinutes,
+                      );
+                      
+                      final debtMinutes = totalRecommendedMinutes - totalActualMinutes;
+                      final debtHours = debtMinutes / 60.0;
+                      
+                      return SleepDebtCard(debtHours: debtHours);
+                    },
+                    loading: () => const SizedBox.shrink(),
+                    error: (_, __) => const SizedBox.shrink(),
                   ),
 
                   const SizedBox(height: 24),
