@@ -33,27 +33,77 @@ class HydrationNotifier extends AsyncNotifier<List<HydrationLog>> {
       timestamp: DateTime.now(),
     );
 
-    state = const AsyncValue.loading();
-    state = await AsyncValue.guard(() async {
+    final previousState = state;
+    // Optimistic update: add the log immediately to the UI
+    if (state.hasValue) {
+      final currentLogs = state.value!;
+      state = AsyncValue.data([...currentLogs, log]);
+    }
+
+    try {
       await _repo.addLog(log);
-      return _loadLogs();
-    });
+      // Similar to deleteLog, we can choose to reload or trust our local state.
+      // For consistency and safety, let's reload silently.
+      final freshLogs = await _repo.getLogs(_selectedDate);
+      state = AsyncValue.data(freshLogs);
+    } catch (e, st) {
+      // Revert on error
+      state = previousState;
+      state = AsyncValue.error(e, st);
+    }
   }
 
   Future<void> updateLog(HydrationLog log) async {
-    state = const AsyncValue.loading();
-    state = await AsyncValue.guard(() async {
+    final previousState = state;
+    // Optimistic update
+    if (state.hasValue) {
+      final currentLogs = state.value!;
+      final index = currentLogs.indexWhere((l) => l.id == log.id);
+      if (index != -1) {
+        final updatedLogs = List<HydrationLog>.from(currentLogs);
+        updatedLogs[index] = log;
+        state = AsyncValue.data(updatedLogs);
+      }
+    }
+
+    try {
       await _repo.updateLog(log);
-      return _loadLogs();
-    });
+      // Reload silently to ensure consistency
+      final freshLogs = await _repo.getLogs(_selectedDate);
+      state = AsyncValue.data(freshLogs);
+    } catch (e, st) {
+      // Revert on error
+      state = previousState;
+      state = AsyncValue.error(e, st);
+    }
   }
 
   Future<void> deleteLog(String id) async {
-    state = const AsyncValue.loading();
-    state = await AsyncValue.guard(() async {
+    final previousState = state;
+    // Optimistic update: remove the log immediately from the UI
+    if (state.hasValue) {
+      final currentLogs = state.value!;
+      state = AsyncValue.data(
+        currentLogs.where((log) => log.id != id).toList(),
+      );
+    }
+
+    try {
       await _repo.deleteLog(id);
-      return _loadLogs();
-    });
+      // No need to reload logs if successful, as our local state is already correct
+      // But to be safe and consistent with other methods, we can reload or just leave it.
+      // Reloading ensures we are in sync with DB triggers etc if any.
+      // For "smoothness", let's NOT reload immediately if we trust the local operation,
+      // OR reload silently without setting state to loading.
+      // _loadLogs() returns a Future<List>, we can update state with it.
+      final freshLogs = await _repo.getLogs(_selectedDate);
+      state = AsyncValue.data(freshLogs);
+    } catch (e, st) {
+      // Revert on error
+      state = previousState;
+      // You might want to show a snackbar here via a side-effect provider or callback
+      state = AsyncValue.error(e, st);
+    }
   }
 }
 
