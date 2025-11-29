@@ -32,12 +32,13 @@ class _SleepLogScreenState extends ConsumerState<SleepLogScreen> {
     final remainingMinutes = totalMinutes % 60;
 
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         title: const Text('Sleep'),
         centerTitle: true,
-        backgroundColor: Colors.black,
-        foregroundColor: Colors.white,
+        elevation: 0,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        titleTextStyle: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
       ),
       body: Column(
         children: [
@@ -58,16 +59,16 @@ class _SleepLogScreenState extends ConsumerState<SleepLogScreen> {
                     width: double.infinity,
                     padding: const EdgeInsets.symmetric(vertical: 48, horizontal: 24),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF151515),
+                      color: Theme.of(context).cardColor,
                       borderRadius: BorderRadius.circular(32),
                     ),
                     child: Column(
                       children: [
                         const Icon(Icons.bedtime, color: Color(0xFF8B5CF6), size: 32),
                         const SizedBox(height: 16),
-                        const Text(
+                        Text(
                           'Total Sleep',
-                          style: TextStyle(color: Colors.grey, fontSize: 14),
+                          style: TextStyle(color: Colors.grey[600], fontSize: 14),
                         ),
                         const SizedBox(height: 8),
                         Row(
@@ -82,8 +83,8 @@ class _SleepLogScreenState extends ConsumerState<SleepLogScreen> {
                               builder: (context, value, child) {
                                 return Text(
                                   value.toString(),
-                                  style: const TextStyle(
-                                    color: Colors.white,
+                                  style: TextStyle(
+                                    color: Theme.of(context).textTheme.bodyLarge?.color,
                                     fontSize: 64,
                                     fontWeight: FontWeight.bold,
                                   ),
@@ -91,10 +92,10 @@ class _SleepLogScreenState extends ConsumerState<SleepLogScreen> {
                               },
                             ),
                             const SizedBox(width: 4),
-                            const Text(
+                            Text(
                               'h',
                               style: TextStyle(
-                                color: Colors.grey,
+                                color: Colors.grey[600],
                                 fontSize: 24,
                                 fontWeight: FontWeight.w500,
                               ),
@@ -108,8 +109,8 @@ class _SleepLogScreenState extends ConsumerState<SleepLogScreen> {
                                 builder: (context, value, child) {
                                   return Text(
                                     value.toString(),
-                                    style: const TextStyle(
-                                      color: Colors.white,
+                                    style: TextStyle(
+                                      color: Theme.of(context).textTheme.bodyLarge?.color,
                                       fontSize: 48,
                                       fontWeight: FontWeight.bold,
                                     ),
@@ -117,10 +118,10 @@ class _SleepLogScreenState extends ConsumerState<SleepLogScreen> {
                                 },
                               ),
                               const SizedBox(width: 4),
-                              const Text(
+                              Text(
                                 'm',
                                 style: TextStyle(
-                                  color: Colors.grey,
+                                  color: Colors.grey[600],
                                   fontSize: 20,
                                   fontWeight: FontWeight.w500,
                                 ),
@@ -186,25 +187,29 @@ class _SleepLogScreenState extends ConsumerState<SleepLogScreen> {
                   if (dailyLogs.isNotEmpty) ...[
                     Container(
                       padding: const EdgeInsets.all(24),
-                      decoration: const BoxDecoration(
-                        color: Color(0xFF151515),
-                        borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).cardColor,
+                        borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text(
+                          Text(
                             "History",
-                            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                              color: Theme.of(context).textTheme.bodyLarge?.color,
+                            ),
                           ),
                           const SizedBox(height: 16),
                           ListView.separated(
                             shrinkWrap: true,
                             physics: const NeverScrollableScrollPhysics(),
                             itemCount: dailyLogs.length,
-                            separatorBuilder: (context, index) => const Divider(
+                            separatorBuilder: (context, index) => Divider(
                               height: 1,
-                              color: Color(0xFF333333),
+                              color: Theme.of(context).dividerColor,
                             ),
                             itemBuilder: (context, index) {
                               final log = dailyLogs[index];
@@ -227,9 +232,9 @@ class _SleepLogScreenState extends ConsumerState<SleepLogScreen> {
                                 ),
                                 title: Text(
                                   '${hours}h ${minutes}m',
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     fontWeight: FontWeight.bold,
-                                    color: Colors.white,
+                                    color: Theme.of(context).textTheme.bodyLarge?.color,
                                     fontSize: 16,
                                   ),
                                 ),
@@ -244,11 +249,11 @@ class _SleepLogScreenState extends ConsumerState<SleepLogScreen> {
                       ),
                     ),
                   ] else
-                    const Padding(
-                      padding: EdgeInsets.all(32.0),
+                    Padding(
+                      padding: const EdgeInsets.all(32.0),
                       child: Text(
                         'No sleep logged yet.\nStart tracking!',
-                        style: TextStyle(color: Colors.grey),
+                        style: TextStyle(color: Colors.grey[600]),
                         textAlign: TextAlign.center,
                       ),
                     ),
@@ -265,7 +270,7 @@ class _SleepLogScreenState extends ConsumerState<SleepLogScreen> {
               child: ElevatedButton(
                 onPressed: () => _showInputModal(context, notifier, selectedDate),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF2C2C2C),
+                  backgroundColor: const Color(0xFF8B5CF6),
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 16),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),

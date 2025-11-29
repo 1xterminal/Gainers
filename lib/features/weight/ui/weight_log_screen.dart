@@ -25,12 +25,13 @@ class _WeightLogScreenState extends ConsumerState<WeightLogScreen> {
     final recentLogsAsync = ref.watch(recentWeightLogsProvider);
 
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         title: const Text('Body composition'),
         centerTitle: true,
-        backgroundColor: Colors.black,
-        foregroundColor: Colors.white,
+        elevation: 0,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+        titleTextStyle: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
       ),
       body: weightState.when(
         data: (logs) {
@@ -67,7 +68,7 @@ class _WeightLogScreenState extends ConsumerState<WeightLogScreen> {
                             width: double.infinity,
                             padding: const EdgeInsets.symmetric(vertical: 48, horizontal: 24),
                             decoration: BoxDecoration(
-                              color: const Color(0xFF151515),
+                              color: Theme.of(context).cardColor,
                               borderRadius: BorderRadius.circular(32),
                             ),
                             child: Column(
@@ -86,8 +87,8 @@ class _WeightLogScreenState extends ConsumerState<WeightLogScreen> {
                                       builder: (context, value, child) {
                                         return Text(
                                           value.toStringAsFixed(1),
-                                          style: const TextStyle(
-                                            color: Colors.white,
+                                          style: TextStyle(
+                                            color: Theme.of(context).textTheme.bodyLarge?.color,
                                             fontSize: 64,
                                             fontWeight: FontWeight.bold,
                                           ),
@@ -95,10 +96,10 @@ class _WeightLogScreenState extends ConsumerState<WeightLogScreen> {
                                       },
                                     ),
                                     const SizedBox(width: 8),
-                                    const Text(
+                                    Text(
                                       'kg',
                                       style: TextStyle(
-                                        color: Colors.grey,
+                                        color: Colors.grey[600],
                                         fontSize: 24,
                                         fontWeight: FontWeight.w500,
                                       ),
@@ -114,7 +115,7 @@ class _WeightLogScreenState extends ConsumerState<WeightLogScreen> {
                           Container(
                             padding: const EdgeInsets.all(24),
                             decoration: BoxDecoration(
-                              color: const Color(0xFF151515),
+                              color: Theme.of(context).cardColor,
                               borderRadius: BorderRadius.circular(32),
                             ),
                             child: Column(
@@ -124,39 +125,50 @@ class _WeightLogScreenState extends ConsumerState<WeightLogScreen> {
                                 Row(
                                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                   children: [
-                                    const Text('BMI >', style: TextStyle(color: Colors.white, fontSize: 16)),
-                                    const Icon(Icons.info_outline, color: Colors.grey, size: 20),
+                                    Text('BMI >', style: TextStyle(color: Theme.of(context).textTheme.bodyLarge?.color, fontSize: 16)),
+                                    Icon(Icons.info_outline, color: Colors.grey[600], size: 20),
                                   ],
                                 ),
                                 const SizedBox(height: 8),
-                                Text(bmi.toStringAsFixed(1), style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold)),
+                                Text(
+                                  bmi.toStringAsFixed(1),
+                                  style: TextStyle(
+                                    color: Theme.of(context).textTheme.bodyLarge?.color,
+                                    fontSize: 24,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
                                 const SizedBox(height: 8),
                                 _buildProgressBar(value: (bmi / 40).clamp(0.0, 1.0), color: Colors.green),
                                 const SizedBox(height: 4),
-                                const Row(
+                                Row(
                                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                   children: [
-                                    Text('18.5', style: TextStyle(color: Colors.grey, fontSize: 12)),
-                                    Text('25.0', style: TextStyle(color: Colors.grey, fontSize: 12)),
+                                    Text('18.5', style: TextStyle(color: Colors.grey[600], fontSize: 12)),
+                                    Text('25.0', style: TextStyle(color: Colors.grey[600], fontSize: 12)),
                                   ],
                                 ),
                                 
                                 const SizedBox(height: 24),
-                                const Divider(color: Colors.grey, height: 1),
+                                Divider(color: Theme.of(context).dividerColor, height: 1),
                                 const SizedBox(height: 24),
 
                                 // Skeletal Muscle Section
                                 Row(
                                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                   children: [
-                                    const Text('Skeletal Muscle >', style: TextStyle(color: Colors.white, fontSize: 16)),
-                                    const Icon(Icons.info_outline, color: Colors.grey, size: 20),
+                                    Text('Skeletal Muscle >', style: TextStyle(color: Theme.of(context).textTheme.bodyLarge?.color, fontSize: 16)),
+                                    Icon(Icons.info_outline, color: Colors.grey[600], size: 20),
                                   ],
                                 ),
                                 const SizedBox(height: 8),
                                 Text(
                                   muscle != null ? '${muscle.toStringAsFixed(1)} kg' : '--', 
-                                  style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold)
+                                  style: TextStyle(
+                                    color: Theme.of(context).textTheme.bodyLarge?.color,
+                                    fontSize: 24,
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
                                 const SizedBox(height: 8),
                                 _buildProgressBar(
@@ -165,21 +177,25 @@ class _WeightLogScreenState extends ConsumerState<WeightLogScreen> {
                                 ),
                                 
                                 const SizedBox(height: 24),
-                                const Divider(color: Colors.grey, height: 1),
+                                Divider(color: Theme.of(context).dividerColor, height: 1),
                                 const SizedBox(height: 24),
 
                                 // Body Fat Section
                                 Row(
                                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                   children: [
-                                    const Text('Body Fat >', style: TextStyle(color: Colors.white, fontSize: 16)),
-                                    const Icon(Icons.info_outline, color: Colors.grey, size: 20),
+                                    Text('Body Fat >', style: TextStyle(color: Theme.of(context).textTheme.bodyLarge?.color, fontSize: 16)),
+                                    Icon(Icons.info_outline, color: Colors.grey[600], size: 20),
                                   ],
                                 ),
                                 const SizedBox(height: 8),
                                 Text(
                                   fat != null ? '${fat.toStringAsFixed(1)} %' : '--', 
-                                  style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold)
+                                  style: TextStyle(
+                                    color: Theme.of(context).textTheme.bodyLarge?.color,
+                                    fontSize: 24,
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
                                 const SizedBox(height: 8),
                                 _buildProgressBar(
@@ -213,7 +229,7 @@ class _WeightLogScreenState extends ConsumerState<WeightLogScreen> {
                       child: ElevatedButton(
                         onPressed: () => _showInputModal(context, weight, muscle, fat),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF2C2C2C),
+                          backgroundColor: Colors.green,
                           foregroundColor: Colors.white,
                           padding: const EdgeInsets.symmetric(vertical: 16),
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
@@ -226,11 +242,11 @@ class _WeightLogScreenState extends ConsumerState<WeightLogScreen> {
               );
             },
             loading: () => const Center(child: CircularProgressIndicator()),
-            error: (err, stack) => Center(child: Text('Error loading profile: $err', style: const TextStyle(color: Colors.white))),
+            error: (err, stack) => Center(child: Text('Error loading profile: $err', style: TextStyle(color: Theme.of(context).textTheme.bodyLarge?.color))),
           );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (err, stack) => Center(child: Text('Error loading weight log: $err', style: const TextStyle(color: Colors.white))),
+        error: (err, stack) => Center(child: Text('Error loading weight log: $err', style: TextStyle(color: Theme.of(context).textTheme.bodyLarge?.color))),
       ),
     );
   }
@@ -291,5 +307,3 @@ class _WeightLogScreenState extends ConsumerState<WeightLogScreen> {
     );
   }
 }
-
-
