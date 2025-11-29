@@ -59,4 +59,13 @@ class WeightRepository {
 
     return sorted.first;
   }
+
+  Future<List<WeightLog>> getRecentWeightLogs({int limit = 7}) async {
+    if (_dummyLogs.isEmpty) return [];
+
+    final sorted = List<WeightLog>.from(_dummyLogs)
+      ..sort((a, b) => b.date.compareTo(a.date));
+
+    return sorted.take(limit).toList();
+  }
 }

@@ -4,6 +4,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../profile/providers/profile_provider.dart';
 import '../providers/weight_provider.dart';
 import '../../../core/widgets/horizontal_date_wheel.dart';
+import 'widgets/weight_input_modal.dart';
+import 'widgets/weight_history_list.dart';
 
 class WeightLogScreen extends ConsumerStatefulWidget {
   const WeightLogScreen({super.key});
@@ -17,7 +19,10 @@ class _WeightLogScreenState extends ConsumerState<WeightLogScreen> {
   Widget build(BuildContext context) {
     final userId = Supabase.instance.client.auth.currentUser?.id;
     final profileAsync = ref.watch(getProfileProvider(userId ?? ''));
-    final latestLogAsync = ref.watch(latestWeightLogProvider);
+    final weightNotifier = ref.read(weightProvider.notifier);
+    final selectedDate = weightNotifier.selectedDate;
+    final weightState = ref.watch(weightProvider);
+    final recentLogsAsync = ref.watch(recentWeightLogsProvider);
 
     return Scaffold(
       backgroundColor: Colors.black,
@@ -32,8 +37,11 @@ class _WeightLogScreenState extends ConsumerState<WeightLogScreen> {
           IconButton(icon: const Icon(Icons.more_vert), onPressed: () {}),
         ],
       ),
-      body: latestLogAsync.when(
-        data: (latestLog) {
+      body: weightState.when(
+        data: (logs) {
+          // Get latest log from the list
+          final latestLog = logs.isNotEmpty ? logs.first : null;
+          
           return profileAsync.when(
             data: (profile) {
               // Priority: Latest Log > Profile > 0
@@ -52,6 +60,13 @@ class _WeightLogScreenState extends ConsumerState<WeightLogScreen> {
                       padding: const EdgeInsets.all(16),
                       child: Column(
                         children: [
+                          // Date Wheel
+                          HorizontalDateWheel(
+                            selectedDate: selectedDate,
+                            onDateSelected: (date) => weightNotifier.setDate(date),
+                          ),
+                          const SizedBox(height: 24),
+                          
                           // Main Weight Card
                           Container(
                             width: double.infinity,
@@ -69,13 +84,20 @@ class _WeightLogScreenState extends ConsumerState<WeightLogScreen> {
                                   crossAxisAlignment: CrossAxisAlignment.baseline,
                                   textBaseline: TextBaseline.alphabetic,
                                   children: [
-                                    Text(
-                                      weight.toStringAsFixed(1),
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 64,
-                                        fontWeight: FontWeight.bold,
-                                      ),
+                                    TweenAnimationBuilder<double>(
+                                      tween: Tween<double>(begin: 0, end: weight),
+                                      duration: const Duration(seconds: 1),
+                                      curve: Curves.easeOutExpo,
+                                      builder: (context, value, child) {
+                                        return Text(
+                                          value.toStringAsFixed(1),
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 64,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        );
+                                      },
                                     ),
                                     const SizedBox(width: 8),
                                     const Text(
@@ -173,11 +195,15 @@ class _WeightLogScreenState extends ConsumerState<WeightLogScreen> {
                             ),
                           ),
                           
-                          const SizedBox(height: 16),
-                          const Text(
-                            'Body water and basal metabolic rate (BMR) are estimated based on your skeletal muscle and body fat percentage.',
-                            style: TextStyle(color: Colors.grey, fontSize: 12),
-                            textAlign: TextAlign.center,
+                          const SizedBox(height: 24),
+                          
+                          // History List
+                          recentLogsAsync.when(
+                            data: (logs) => logs.isNotEmpty 
+                              ? WeightHistoryList(logs: logs)
+                              : const SizedBox.shrink(),
+                            loading: () => const SizedBox.shrink(),
+                            error: (_, __) => const SizedBox.shrink(),
                           ),
                         ],
                       ),
@@ -240,7 +266,7 @@ class _WeightLogScreenState extends ConsumerState<WeightLogScreen> {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.black,
-      builder: (context) => _WeightInputModal(
+      builder: (context) => WeightInputModal(
         initialWeight: currentWeight,
         initialMuscle: currentMuscle,
         initialFat: currentFat,
@@ -271,238 +297,4 @@ class _WeightLogScreenState extends ConsumerState<WeightLogScreen> {
   }
 }
 
-class _WeightInputModal extends StatefulWidget {
-  final double initialWeight;
-  final double? initialMuscle;
-  final double? initialFat;
-  final Function(double, double?, double?, String?) onSave;
 
-  const _WeightInputModal({
-    required this.initialWeight,
-    this.initialMuscle,
-    this.initialFat,
-    required this.onSave,
-  });
-
-  @override
-  State<_WeightInputModal> createState() => _WeightInputModalState();
-}
-
-class _WeightInputModalState extends State<_WeightInputModal> {
-  late FixedExtentScrollController _intController;
-  late FixedExtentScrollController _decimalController;
-  late int _selectedInt;
-  late int _selectedDecimal;
-  
-  late TextEditingController _muscleController;
-  late TextEditingController _fatController;
-  late TextEditingController _notesController;
-
-  @override
-  void initState() {
-    super.initState();
-    _selectedInt = widget.initialWeight.floor();
-    _selectedDecimal = ((widget.initialWeight - _selectedInt) * 10).round();
-    if (_selectedInt == 0) _selectedInt = 60; // Default if 0
-
-    _intController = FixedExtentScrollController(initialItem: _selectedInt);
-    _decimalController = FixedExtentScrollController(initialItem: _selectedDecimal);
-    
-    _muscleController = TextEditingController(text: widget.initialMuscle?.toString() ?? '');
-    _fatController = TextEditingController(text: widget.initialFat?.toString() ?? '');
-    _notesController = TextEditingController();
-  }
-
-  @override
-  void dispose() {
-    _intController.dispose();
-    _decimalController.dispose();
-    _muscleController.dispose();
-    _fatController.dispose();
-    _notesController.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: MediaQuery.of(context).size.height * 0.9,
-      padding: const EdgeInsets.all(16),
-      decoration: const BoxDecoration(
-        color: Colors.black,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      child: Column(
-        children: [
-          const SizedBox(height: 16),
-          const Text('Weight (kg)', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
-          const SizedBox(height: 24),
-          
-          // Wheel Picker
-          Container(
-            height: 200,
-            padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              color: const Color(0xFF151515),
-              borderRadius: BorderRadius.circular(24),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                // Integer Wheel
-                SizedBox(
-                  width: 70,
-                  child: ListWheelScrollView.useDelegate(
-                    controller: _intController,
-                    itemExtent: 50,
-                    perspective: 0.005,
-                    diameterRatio: 1.2,
-                    physics: const FixedExtentScrollPhysics(),
-                    onSelectedItemChanged: (index) => setState(() => _selectedInt = index),
-                    childDelegate: ListWheelChildBuilderDelegate(
-                      builder: (context, index) {
-                        final isSelected = index == _selectedInt;
-                        return Center(
-                          child: Text(
-                            index.toString(),
-                            style: TextStyle(
-                              fontSize: isSelected ? 32 : 24,
-                              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                              color: isSelected ? Colors.white : Colors.grey[700],
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 10),
-                const Text('.', style: TextStyle(color: Colors.white, fontSize: 32, fontWeight: FontWeight.bold)),
-                const SizedBox(width: 10),
-                // Decimal Wheel
-                SizedBox(
-                  width: 50,
-                  child: ListWheelScrollView.useDelegate(
-                    controller: _decimalController,
-                    itemExtent: 50,
-                    perspective: 0.005,
-                    diameterRatio: 1.2,
-                    physics: const FixedExtentScrollPhysics(),
-                    onSelectedItemChanged: (index) => setState(() => _selectedDecimal = index),
-                    childDelegate: ListWheelChildBuilderDelegate(
-                      builder: (context, index) {
-                        if (index > 9) return null;
-                        final isSelected = index == _selectedDecimal;
-                        return Center(
-                          child: Text(
-                            index.toString(),
-                            style: TextStyle(
-                              fontSize: isSelected ? 32 : 24,
-                              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                              color: isSelected ? Colors.white : Colors.grey[700],
-                            ),
-                          ),
-                        );
-                      },
-                      childCount: 10,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          
-          const SizedBox(height: 16),
-          
-          // Extra Fields
-          Container(
-            padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              color: const Color(0xFF151515),
-              borderRadius: BorderRadius.circular(24),
-            ),
-            child: Column(
-              children: [
-                _buildTextField('Skeletal muscle (kg)', _muscleController),
-                const SizedBox(height: 16),
-                const Divider(color: Colors.grey, height: 1),
-                const SizedBox(height: 16),
-                _buildTextField('Body fat (%)', _fatController),
-              ],
-            ),
-          ),
-          
-          const SizedBox(height: 16),
-          
-          // Notes
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-            decoration: BoxDecoration(
-              color: const Color(0xFF151515),
-              borderRadius: BorderRadius.circular(24),
-            ),
-            child: TextField(
-              controller: _notesController,
-              decoration: const InputDecoration(
-                icon: Icon(Icons.notes, color: Colors.grey),
-                hintText: 'Notes',
-                hintStyle: TextStyle(color: Colors.grey),
-                border: InputBorder.none,
-              ),
-              style: const TextStyle(color: Colors.white),
-            ),
-          ),
-          
-          const Spacer(),
-          
-          // Buttons
-          Row(
-            children: [
-              Expanded(
-                child: TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text('Cancel', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: ElevatedButton(
-                  onPressed: () {
-                    final weight = _selectedInt + (_selectedDecimal / 10.0);
-                    final muscle = double.tryParse(_muscleController.text);
-                    final fat = double.tryParse(_fatController.text);
-                    final notes = _notesController.text;
-                    widget.onSave(weight, muscle, fat, notes);
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF2C2C2C),
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-                  ),
-                  child: const Text('Save', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTextField(String label, TextEditingController controller) {
-    return TextField(
-      controller: controller,
-      decoration: InputDecoration(
-        labelText: label,
-        labelStyle: const TextStyle(color: Colors.grey),
-        border: InputBorder.none,
-        contentPadding: EdgeInsets.zero,
-        isDense: true,
-      ),
-      style: const TextStyle(color: Colors.white, fontSize: 18),
-      keyboardType: const TextInputType.numberWithOptions(decimal: true),
-    );
-  }
-}

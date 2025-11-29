@@ -69,3 +69,10 @@ final latestWeightLogProvider = FutureProvider<WeightLog?>((ref) async {
   final repo = ref.watch(weightRepositoryProvider);
   return repo.getLatestWeightLog();
 });
+
+final recentWeightLogsProvider = FutureProvider<List<WeightLog>>((ref) async {
+  final repo = ref.watch(weightRepositoryProvider);
+  // Watch for changes to weightProvider to trigger refresh
+  ref.watch(weightProvider); 
+  return repo.getRecentWeightLogs();
+});

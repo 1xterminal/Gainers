@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../../core/widgets/horizontal_date_wheel.dart';
 import '../providers/sleep_provider.dart';
+import 'widgets/sleep_input_modal.dart';
 
 class SleepLogScreen extends ConsumerStatefulWidget {
   const SleepLogScreen({super.key});
@@ -12,225 +13,260 @@ class SleepLogScreen extends ConsumerStatefulWidget {
 }
 
 class _SleepLogScreenState extends ConsumerState<SleepLogScreen> {
-  TimeOfDay? _bedTime;
-  TimeOfDay? _wakeTime;
-
   @override
   Widget build(BuildContext context) {
     final sleepState = ref.watch(sleepProvider);
     final notifier = ref.read(sleepProvider.notifier);
     final selectedDate = ref.watch(sleepProvider.notifier).selectedDate;
-    final theme = Theme.of(context);
 
     final dailyLogs = sleepState.value ?? [];
-
-    String durationText = '--';
-    if (_bedTime != null && _wakeTime != null) {
-      final now = DateTime.now();
-      final bedDateTime = DateTime(now.year, now.month, now.day, _bedTime!.hour, _bedTime!.minute);
-      var wakeDateTime = DateTime(now.year, now.month, now.day, _wakeTime!.hour, _wakeTime!.minute);
-      if (wakeDateTime.isBefore(bedDateTime)) {
-        wakeDateTime = wakeDateTime.add(const Duration(days: 1));
-      }
-      final diff = wakeDateTime.difference(bedDateTime);
-      durationText = '${diff.inHours}h ${diff.inMinutes % 60}m';
-    }
+    
+    // Calculate total sleep duration for today
+    final totalMinutes = dailyLogs.fold<int>(
+      0,
+      (sum, log) => sum + log.durationMinutes,
+    );
+    final totalHours = totalMinutes ~/ 60;
+    final remainingMinutes = totalMinutes % 60;
 
     return Scaffold(
+      backgroundColor: Colors.black,
       appBar: AppBar(
-        title: const Text('Sleep Log'),
+        title: const Text('Sleep'),
         centerTitle: true,
+        backgroundColor: Colors.black,
+        foregroundColor: Colors.white,
       ),
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            HorizontalDateWheel(
-              selectedDate: selectedDate,
-              onDateSelected: (date) {
-                notifier.setDate(date);
-              },
-            ),
-            const SizedBox(height: 24),
-            
-            // Input Section
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Card(
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    children: [
-                      _buildTimePickerTile(
-                        context,
-                        title: 'Bed Time',
-                        icon: Icons.bedtime,
-                        color: Colors.purple,
-                        time: _bedTime,
-                        onTimeSelected: (t) => setState(() => _bedTime = t),
-                      ),
-                      const Divider(),
-                      _buildTimePickerTile(
-                        context,
-                        title: 'Wake Time',
-                        icon: Icons.wb_sunny,
-                        color: Colors.orange,
-                        time: _wakeTime,
-                        onTimeSelected: (t) => setState(() => _wakeTime = t),
-                      ),
-                      const SizedBox(height: 24),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          const Text('Total Duration', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                          Text(durationText, style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: theme.primaryColor)),
-                        ],
-                      ),
-                      const SizedBox(height: 24),
-                      SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton(
-                          onPressed: (_bedTime == null || _wakeTime == null) ? null : () async {
-                            final start = DateTime(selectedDate.year, selectedDate.month, selectedDate.day, _bedTime!.hour, _bedTime!.minute);
-                            var end = DateTime(selectedDate.year, selectedDate.month, selectedDate.day, _wakeTime!.hour, _wakeTime!.minute);
-                            if (end.isBefore(start)) {
-                              end = end.add(const Duration(days: 1));
-                            }
-                            
-                            await notifier.addLog(start, end);
-                            if (mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Sleep log saved!')));
-                              setState(() {
-                                _bedTime = null;
-                                _wakeTime = null;
-                              });
-                            }
-                          },
-                          style: ElevatedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                            backgroundColor: theme.primaryColor,
-                            foregroundColor: Colors.white,
-                          ),
-                          child: const Text('Save Log'),
-                        ),
-                      ),
-                    ],
+      body: Column(
+        children: [
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                children: [
+                  // Date Wheel
+                  HorizontalDateWheel(
+                    selectedDate: selectedDate,
+                    onDateSelected: (date) => notifier.setDate(date),
                   ),
-                ),
-              ),
-            ),
+                  const SizedBox(height: 24),
 
-            const SizedBox(height: 16),
-            
-            // Logs List
-            if (dailyLogs.isNotEmpty) ...[
-              const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 16),
-                child: Align(alignment: Alignment.centerLeft, child: Text('Today\'s Logs', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold))),
-              ),
-              const SizedBox(height: 8),
-              ListView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: dailyLogs.length,
-                itemBuilder: (context, index) {
-                  final log = dailyLogs[index];
-                  final hours = log.durationMinutes ~/ 60;
-                  final minutes = log.durationMinutes % 60;
-                  
-                  return Container(
-                    margin: const EdgeInsets.only(bottom: 16),
-                    padding: const EdgeInsets.all(24),
+                  // Main Sleep Duration Card
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(vertical: 48, horizontal: 24),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF151515), // Dark background like image
-                      borderRadius: BorderRadius.circular(24),
+                      color: const Color(0xFF151515),
+                      borderRadius: BorderRadius.circular(32),
                     ),
                     child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
-                          'Sleep time',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
+                        const Icon(Icons.bedtime, color: Color(0xFF8B5CF6), size: 32),
                         const SizedBox(height: 16),
+                        const Text(
+                          'Total Sleep',
+                          style: TextStyle(color: Colors.grey, fontSize: 14),
+                        ),
+                        const SizedBox(height: 8),
                         Row(
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          crossAxisAlignment: CrossAxisAlignment.center,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.baseline,
+                          textBaseline: TextBaseline.alphabetic,
                           children: [
-                            const Icon(Icons.bedtime, color: Color(0xFF8B5CF6), size: 32), // Violet icon
-                            const SizedBox(width: 12),
-                            Text(
-                              '${hours}h ${minutes > 0 ? "$minutes" : ""}',
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 48,
+                            TweenAnimationBuilder<int>(
+                              tween: IntTween(begin: 0, end: totalHours),
+                              duration: const Duration(seconds: 1),
+                              curve: Curves.easeOutExpo,
+                              builder: (context, value, child) {
+                                return Text(
+                                  value.toString(),
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 64,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                );
+                              },
+                            ),
+                            const SizedBox(width: 4),
+                            const Text(
+                              'h',
+                              style: TextStyle(
+                                color: Colors.grey,
+                                fontSize: 24,
                                 fontWeight: FontWeight.w500,
                               ),
                             ),
-                            if (minutes > 0) // Small 'm' if minutes exist, but image shows '13 h'
-                              Padding(
-                                padding: const EdgeInsets.only(bottom: 8.0),
-                                child: Text(
-                                  'm',
-                                  style: TextStyle(
-                                    color: Colors.grey[400],
-                                    fontSize: 24,
-                                  ),
+                            if (remainingMinutes > 0) ...[
+                              const SizedBox(width: 12),
+                              TweenAnimationBuilder<int>(
+                                tween: IntTween(begin: 0, end: remainingMinutes),
+                                duration: const Duration(seconds: 1),
+                                curve: Curves.easeOutExpo,
+                                builder: (context, value, child) {
+                                  return Text(
+                                    value.toString(),
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 48,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  );
+                                },
+                              ),
+                              const SizedBox(width: 4),
+                              const Text(
+                                'm',
+                                style: TextStyle(
+                                  color: Colors.grey,
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.w500,
                                 ),
                               ),
+                            ],
                           ],
-                        ),
-                        const SizedBox(height: 4),
-                        Align(
-                          alignment: Alignment.centerRight,
-                          child: Text(
-                            '${DateFormat('HH:mm').format(log.startTime)} - ${DateFormat('HH:mm').format(log.endTime)}',
-                            style: TextStyle(
-                              color: Colors.grey[500],
-                              fontSize: 14,
-                            ),
-                          ),
                         ),
                       ],
                     ),
-                  );
-                },
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  // Logs List
+                  if (dailyLogs.isNotEmpty) ...[
+                    Container(
+                      padding: const EdgeInsets.all(24),
+                      decoration: const BoxDecoration(
+                        color: Color(0xFF151515),
+                        borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            "History",
+                            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+                          ),
+                          const SizedBox(height: 16),
+                          ListView.separated(
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            itemCount: dailyLogs.length,
+                            separatorBuilder: (context, index) => const Divider(
+                              height: 1,
+                              color: Color(0xFF333333),
+                            ),
+                            itemBuilder: (context, index) {
+                              final log = dailyLogs[index];
+                              final hours = log.durationMinutes ~/ 60;
+                              final minutes = log.durationMinutes % 60;
+
+                              return ListTile(
+                                contentPadding: const EdgeInsets.symmetric(vertical: 8),
+                                leading: Container(
+                                  padding: const EdgeInsets.all(10),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFF8B5CF6).withValues(alpha: 0.1),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: const Icon(
+                                    Icons.bedtime,
+                                    color: Color(0xFF8B5CF6),
+                                    size: 20,
+                                  ),
+                                ),
+                                title: Text(
+                                  '${hours}h ${minutes}m',
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.white,
+                                    fontSize: 16,
+                                  ),
+                                ),
+                                subtitle: Text(
+                                  '${DateFormat('HH:mm').format(log.startTime)} - ${DateFormat('HH:mm').format(log.endTime)}',
+                                  style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                                ),
+                              );
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                  ] else
+                    const Padding(
+                      padding: EdgeInsets.all(32.0),
+                      child: Text(
+                        'No sleep logged yet.\nStart tracking!',
+                        style: TextStyle(color: Colors.grey),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                ],
               ),
-            ] else 
-              const Padding(
-                padding: EdgeInsets.all(32.0),
-                child: Text('No logs for this date', style: TextStyle(color: Colors.grey)),
+            ),
+          ),
+
+          // Bottom Button
+          Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () => _showInputModal(context, notifier, selectedDate),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF2C2C2C),
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+                ),
+                child: const Text(
+                  'Log Sleep',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
               ),
-          ],
-        ),
+            ),
+          ),
+        ],
       ),
     );
   }
 
-  Widget _buildTimePickerTile(BuildContext context, {required String title, required IconData icon, required Color color, required TimeOfDay? time, required Function(TimeOfDay) onTimeSelected}) {
-    return ListTile(
-      contentPadding: EdgeInsets.zero,
-      leading: Container(
-        padding: const EdgeInsets.all(8),
-        decoration: BoxDecoration(color: color.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)),
-        child: Icon(icon, color: color),
+  void _showInputModal(BuildContext context, notifier, DateTime selectedDate) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => SleepInputModal(
+        onSave: (bedTime, wakeTime) async {
+          final start = DateTime(
+            selectedDate.year,
+            selectedDate.month,
+            selectedDate.day,
+            bedTime.hour,
+            bedTime.minute,
+          );
+          var end = DateTime(
+            selectedDate.year,
+            selectedDate.month,
+            selectedDate.day,
+            wakeTime.hour,
+            wakeTime.minute,
+          );
+          if (end.isBefore(start)) {
+            end = end.add(const Duration(days: 1));
+          }
+
+          await notifier.addLog(start, end);
+          
+          if (mounted) {
+            Navigator.pop(context);
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Sleep log saved!')),
+            );
+          }
+        },
       ),
-      title: Text(title),
-      trailing: Text(
-        time?.format(context) ?? 'Select',
-        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-      ),
-      onTap: () async {
-        final picked = await showTimePicker(context: context, initialTime: time ?? const TimeOfDay(hour: 22, minute: 0));
-        if (picked != null) {
-          onTimeSelected(picked);
-        }
-      },
     );
   }
 }
