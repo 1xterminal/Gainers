@@ -82,12 +82,19 @@ class _MacroPieChartState extends State<MacroPieChart> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(
-                    '${widget.totalCalories}',
-                    style: theme.textTheme.headlineMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: theme.primaryColor,
-                    ),
+                  TweenAnimationBuilder<int>(
+                    tween: IntTween(begin: 0, end: widget.totalCalories),
+                    duration: const Duration(milliseconds: 1000),
+                    curve: Curves.easeOutExpo,
+                    builder: (context, value, child) {
+                      return Text(
+                        '$value',
+                        style: theme.textTheme.headlineMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: theme.primaryColor,
+                        ),
+                      );
+                    },
                   ),
                   Text(
                     'Kcal',

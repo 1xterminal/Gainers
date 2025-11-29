@@ -42,6 +42,7 @@ class _HydrationScreenState extends ConsumerState<HydrationScreen> {
 
     // Listen for target reached to play confetti
     ref.listen(hydrationProvider, (previous, next) {
+      if (!mounted) return;
       if (next.hasValue && next.value != null) {
         final totalIntake = next.value!.fold(
           0,
