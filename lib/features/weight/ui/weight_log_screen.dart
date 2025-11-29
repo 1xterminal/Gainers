@@ -31,11 +31,6 @@ class _WeightLogScreenState extends ConsumerState<WeightLogScreen> {
         centerTitle: true,
         backgroundColor: Colors.black,
         foregroundColor: Colors.white,
-        actions: [
-          IconButton(icon: const Icon(Icons.share), onPressed: () {}),
-          IconButton(icon: const Icon(Icons.bar_chart), onPressed: () {}),
-          IconButton(icon: const Icon(Icons.more_vert), onPressed: () {}),
-        ],
       ),
       body: weightState.when(
         data: (logs) {

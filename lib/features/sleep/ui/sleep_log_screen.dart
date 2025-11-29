@@ -126,6 +126,30 @@ class _SleepLogScreenState extends ConsumerState<SleepLogScreen> {
                             ],
                           ],
                         ),
+                        
+                        // Simple Goal Message
+                        if (totalHours >= 12) ...[
+                          const SizedBox(height: 16),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                            decoration: BoxDecoration(
+                              color: Colors.green.withValues(alpha: 0.2),
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(color: Colors.green),
+                            ),
+                            child: const Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(Icons.check_circle, color: Colors.green, size: 16),
+                                SizedBox(width: 8),
+                                Text(
+                                  'Good Job! (12h+)',
+                                  style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
                       ],
                     ),
                   ),

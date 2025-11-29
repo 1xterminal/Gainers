@@ -64,9 +64,24 @@ class WeightHistoryList extends StatelessWidget {
                     '${log.weight} kg',
                     style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.white, fontSize: 16),
                   ),
-                  subtitle: Text(
-                    DateFormat('MMM d, h:mm a').format(log.createdAt),
-                    style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                  subtitle: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        DateFormat('MMM d, h:mm a').format(log.createdAt),
+                        style: TextStyle(color: Colors.grey[600], fontSize: 12),
+                      ),
+                      if (log.notes != null && log.notes!.isNotEmpty)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 4.0),
+                          child: Text(
+                            log.notes!,
+                            style: TextStyle(color: Colors.grey[400], fontSize: 12, fontStyle: FontStyle.italic),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                    ],
                   ),
                   trailing: log.bodyFat != null 
                     ? Column(
