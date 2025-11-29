@@ -33,7 +33,7 @@ class ActivityCards {
             '${NumberFormat('#,###').format(steps)} / 10,000 Steps',
             key: ValueKey<int>(steps),
             style: TextStyle(
-              fontSize: 18,
+              fontSize: 12,
               fontWeight: FontWeight.bold,
               color: theme.labelStyle.color,
             ),
@@ -49,7 +49,9 @@ class ActivityCards {
               return LinearProgressIndicator(
                 value: value,
                 backgroundColor: theme.barBackgroundColor,
-                color: steps / 10000 >= 1 ? theme.toolTipColor : theme.barColor,
+                color: steps / 10000 >= 1
+                    ? theme.toolTipColor.withBlue(70)
+                    : theme.barColor,
                 minHeight: 30,
                 borderRadius: BorderRadius.circular(12),
               );
@@ -140,6 +142,189 @@ class ActivityCards {
             Text(title, style: TextStyle(color: textColor, fontSize: 14)),
           ],
         ),
+      ),
+    );
+  }
+
+  //widget to make lifetime info card
+  static Widget buildLifetimeInfoCard(
+    BuildContext context, {
+    required String title,
+    required int steps,
+    required double distance,
+    required Color textColor,
+  }) {
+    final theme = Theme.of(context).extension<BarChartTheme>()!;
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: theme.gridColor,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.blueGrey.withValues(alpha: 0.2),
+            offset: const Offset(0, 0),
+            blurRadius: 3,
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.assist_walker, color: textColor, size: 30),
+              const SizedBox(width: 12),
+              Text(
+                title,
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: textColor,
+                ),
+              ),
+            ],
+          ),
+          Divider(color: textColor, height: 20, thickness: 2),
+          const SizedBox(height: 10),
+
+          //steps and distance
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Row(
+                children: [
+                  Icon(Icons.map, color: textColor, size: 20),
+                  const SizedBox(width: 4),
+                  Text(
+                    '${NumberFormat('###').format(steps)} Steps',
+                    style: TextStyle(color: textColor, fontSize: 16),
+                  ),
+                ],
+              ),
+              const SizedBox(width: 12),
+              Row(
+                children: [
+                  Icon(Icons.directions_walk, color: textColor, size: 20),
+                  const SizedBox(width: 4),
+                  Text(
+                    '${NumberFormat('#,##').format(distance)} km',
+                    style: TextStyle(color: textColor, fontSize: 16),
+                  ),
+                ],
+              ),
+              const SizedBox(width: 12),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  //widget to make record info card
+  static Widget buildRecordInfoCard(
+    BuildContext context, {
+    required String title,
+    required String title2,
+    required int steps,
+    required double distance,
+    required Color textColor,
+    DateTime? date,
+  }) {
+    final theme = Theme.of(context).extension<BarChartTheme>()!;
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: theme.gridColor,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.blueGrey.withValues(alpha: 0.2),
+            offset: const Offset(0, 0),
+            blurRadius: 3,
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.emoji_events, color: textColor, size: 30),
+              const SizedBox(width: 12),
+              Column(
+                children: [
+                  Text(
+                    title,
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: textColor,
+                    ),
+                  ),
+                  Text(
+                    title2,
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: textColor,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(width: 24),
+            ],
+          ),
+          Container(height: 60, width: 2, color: textColor),
+          const SizedBox(width: 24),
+
+          //steps and distance
+          Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              if (date != null) ...[
+                Row(
+                  children: [
+                    Icon(Icons.calendar_month, color: textColor, size: 24),
+                    const SizedBox(width: 12),
+                    Text(
+                      DateFormat('dd/MM/yyyy').format(date),
+                      style: TextStyle(color: textColor, fontSize: 12),
+                    ),
+                  ],
+                ),
+                const SizedBox(width: 12),
+              ],
+
+              Row(
+                children: [
+                  Icon(Icons.map, color: textColor, size: 24),
+                  const SizedBox(width: 12),
+                  Text(
+                    '${NumberFormat('###').format(steps)} Steps',
+                    style: TextStyle(color: textColor, fontSize: 12),
+                  ),
+                ],
+              ),
+              const SizedBox(width: 12),
+              Row(
+                children: [
+                  Icon(Icons.directions_walk, color: textColor, size: 24),
+                  const SizedBox(width: 12),
+                  Text(
+                    '${NumberFormat('#,##').format(distance)} km',
+                    style: TextStyle(color: textColor, fontSize: 12),
+                  ),
+                ],
+              ),
+              const SizedBox(width: 12),
+            ],
+          ),
+        ],
       ),
     );
   }
