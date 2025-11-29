@@ -1,6 +1,13 @@
 class StepData {
-  final DateTime date;
-  final int steps;
+  final int todaysSteps;
+  final int lifetimeSteps;
+  final int highestSteps;
+  final DateTime? highestStepsDate;
 
-  StepData(this.date, this.steps);
+  StepData({
+    required this.todaysSteps,
+    required this.lifetimeSteps,
+    required this.highestSteps,
+    this.highestStepsDate,
+  });
 }

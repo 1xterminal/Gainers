@@ -5,6 +5,7 @@ class BarChartTheme extends ThemeExtension<BarChartTheme> {
   final Color barBackgroundColor;
   final Color gridColor;
   final Color toolTipColor;
+  final Color greenBars;
   final TextStyle labelStyle;
 
   const BarChartTheme({
@@ -12,6 +13,7 @@ class BarChartTheme extends ThemeExtension<BarChartTheme> {
     required this.barBackgroundColor,
     required this.gridColor,
     required this.toolTipColor,
+    required this.greenBars,
     required this.labelStyle,
   });
 
@@ -21,6 +23,7 @@ class BarChartTheme extends ThemeExtension<BarChartTheme> {
     Color? barBackgroundColor,
     Color? gridColor,
     Color? toolTipColor,
+    Color? greenBars,
     TextStyle? labelStyle,
   }) {
     return BarChartTheme(
@@ -28,6 +31,7 @@ class BarChartTheme extends ThemeExtension<BarChartTheme> {
       barBackgroundColor: barBackgroundColor ?? this.barBackgroundColor,
       gridColor: gridColor ?? this.gridColor,
       toolTipColor: toolTipColor ?? this.toolTipColor,
+      greenBars: greenBars ?? this.greenBars,
       labelStyle: labelStyle ?? this.labelStyle,
     );
   }
@@ -46,6 +50,7 @@ class BarChartTheme extends ThemeExtension<BarChartTheme> {
       )!,
       gridColor: Color.lerp(gridColor, other.gridColor, t)!,
       toolTipColor: Color.lerp(toolTipColor, other.toolTipColor, t)!,
+      greenBars: Color.lerp(greenBars, other.greenBars, t)!,
       labelStyle: TextStyle.lerp(labelStyle, other.labelStyle, t)!,
     );
   }
