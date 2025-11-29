@@ -4,6 +4,8 @@ import 'package:gainers/features/dashboard/ui/dashboard_screen.dart';
 import 'package:gainers/features/profile/ui/profile_screen.dart';
 
 import 'package:gainers/features/activity/ui/exercise_tutorial_screen.dart';
+import 'package:gainers/features/sleep/ui/sleep_log_screen.dart';
+import 'package:gainers/features/weight/ui/weight_log_screen.dart';
 
 class MainLayout extends ConsumerStatefulWidget {
   const MainLayout({super.key});
@@ -91,11 +93,31 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
                     label: 'Food',
                     onTap: () {},
                   ),
-                  _QuickAction(icon: Icons.bed, label: 'Sleep', onTap: () {}),
+                  _QuickAction(
+                    icon: Icons.bed,
+                    label: 'Sleep',
+                    onTap: () {
+                      Navigator.pop(context); // Close modal
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const SleepLogScreen(),
+                        ),
+                      );
+                    },
+                  ),
                   _QuickAction(
                     icon: Icons.monitor_weight,
                     label: 'Weight',
-                    onTap: () {},
+                    onTap: () {
+                      Navigator.pop(context); // Close modal
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const WeightLogScreen(),
+                        ),
+                      );
+                    },
                   ),
                 ],
               ),
