@@ -160,6 +160,7 @@ class AppTheme {
           fontSize: 12,
           fontWeight: FontWeight.bold,
         ),
+        greenBars: const Color.fromARGB(255, 16, 126, 99),
       ),
     ],
   );
@@ -276,6 +277,7 @@ class AppTheme {
           fontSize: 12,
           fontWeight: FontWeight.bold,
         ),
+        greenBars: const Color.fromARGB(255, 46, 157, 130),
       ),
     ],
   );

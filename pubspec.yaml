@@ -45,6 +45,7 @@ dependencies:
   youtube_api: ^1.0.4
   health: ^13.2.1
   permission_handler: ^12.0.1
+  syncfusion_flutter_charts: ^31.2.15
   uuid: ^4.5.2
 
 

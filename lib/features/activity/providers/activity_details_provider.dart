@@ -4,30 +4,18 @@ import 'package:health/health.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:gainers/features/activity/data/models/step_data.dart';
 
-//class to hold step data
-class HealthState {
-  final List<StepData> weeklyData;
-  final int todaysSteps;
-  final int lifetimeSteps;
-
-  HealthState({
-    required this.weeklyData,
-    required this.todaysSteps,
-    required this.lifetimeSteps,
-  });
-}
-
 //notifier to handle fetch health data
-class HealthNotifier extends AsyncNotifier<HealthState> {
+class HealthNotifier extends AsyncNotifier<StepData> {
   final Health _health = Health();
+  DateTime _selectedDate = DateTime.now();
 
   @override
-  Future<HealthState> build() async {
+  Future<StepData> build() async {
     return _fetchHealthData();
   }
 
   //method to fetch health data
-  Future<HealthState> _fetchHealthData() async {
+  Future<StepData> _fetchHealthData() async {
     //1. ask for permission
     var activityStatus = await Permission.activityRecognition.request();
 
@@ -53,47 +41,77 @@ class HealthNotifier extends AsyncNotifier<HealthState> {
       throw Exception('Failed to connect to Health Connect: $e');
     }
 
-    List<StepData> weekSteps = [];
+    //4. define time intervals
+    DateTime date = _selectedDate;
+    DateTime startTime = DateTime(date.year, date.month, date.day, 0, 0, 0);
+    DateTime endTime = DateTime(date.year, date.month, date.day, 23, 59, 59);
+    DateTime lifetimeStart = DateTime(2000, 1, 1);
     DateTime now = DateTime.now();
 
-    //4. fetch data for the last 7 days
-    for (int i = 0; i < 7; i++) {
-      DateTime date = now.subtract(Duration(days: i));
-      DateTime startTime = DateTime(date.year, date.month, date.day, 0, 0, 0);
-      DateTime endTime = DateTime(date.year, date.month, date.day, 23, 59, 59);
+    //5. fetch data
+    final results = await Future.wait([
+      //todays steps
+      _health.getTotalStepsInInterval(startTime, endTime),
 
-      try {
-        int? steps = await _health.getTotalStepsInInterval(startTime, endTime);
+      //lifetime steps
+      _health.getTotalStepsInInterval(lifetimeStart, now),
 
-        if (steps == null || steps == 0) {
-          await _health.getHealthDataFromTypes(
-            startTime: startTime,
-            endTime: endTime,
-            types: types,
-          );
+      //highest steps
+      _health.getHealthDataFromTypes(
+        types: [HealthDataType.STEPS],
+        startTime: lifetimeStart,
+        endTime: now,
+      ),
+    ]);
+
+    int todaysSteps = results[0] as int;
+    int lifetimeSteps = results[1] as int;
+    List<HealthDataPoint> healthData = results[2] as List<HealthDataPoint>;
+
+    //6. get highest steps
+    int highestSteps = 0;
+    DateTime? highestStepsDate;
+    try {
+      healthData = await _health.getHealthDataFromTypes(
+        types: [HealthDataType.STEPS],
+        startTime: lifetimeStart,
+        endTime: date,
+      );
+      Map<String, int> dailyStepsMap = {};
+
+      for (var point in healthData) {
+        String dayKey =
+            '${point.dateFrom.year}-${point.dateFrom.month}-${point.dateFrom.day}';
+        int steps = 0;
+
+        if (point.value is NumericHealthValue) {
+          steps = (point.value as NumericHealthValue).numericValue.toInt();
         }
 
-        weekSteps.add(StepData(date, steps ?? 0));
-      } catch (_) {
-        weekSteps.add(StepData(date, 0));
+        if (dailyStepsMap.containsKey(dayKey)) {
+          dailyStepsMap[dayKey] = dailyStepsMap[dayKey]! + steps;
+        } else {
+          dailyStepsMap[dayKey] = steps;
+        }
       }
+
+      if (dailyStepsMap.isNotEmpty) {
+        var maxEntry = dailyStepsMap.entries.reduce(
+          (curr, next) => curr.value > next.value ? curr : next,
+        );
+        highestSteps = maxEntry.value;
+        highestStepsDate = DateTime.parse(maxEntry.key);
+      }
+    } catch (e) {
+      throw Exception('Failed to connect to Health Connect: $e');
     }
 
-    //5. reverse the list so the oldest data is first
-    weekSteps = weekSteps.reversed.toList();
-
-    //6. get lifetime steps
-    DateTime lifetimeStart = DateTime(2000, 1, 1);
-    int? lifetimeSteps = await _health.getTotalStepsInInterval(
-      lifetimeStart,
-      now,
-    );
-
     //7. return the data
-    return HealthState(
-      weeklyData: weekSteps,
-      todaysSteps: weekSteps.last.steps,
-      lifetimeSteps: lifetimeSteps ?? 0,
+    return StepData(
+      todaysSteps: todaysSteps,
+      lifetimeSteps: lifetimeSteps,
+      highestSteps: highestSteps,
+      highestStepsDate: highestStepsDate,
     );
   }
 
@@ -102,8 +120,16 @@ class HealthNotifier extends AsyncNotifier<HealthState> {
     state = const AsyncValue.loading();
     state = await AsyncValue.guard(() => _fetchHealthData());
   }
+
+  Future<void> setDate(DateTime date) async {
+    _selectedDate = date;
+    state = const AsyncValue.loading();
+    state = await AsyncValue.guard(() => _fetchHealthData());
+  }
+
+  DateTime get selectedDate => _selectedDate;
 }
 
-final healthProvider = AsyncNotifierProvider<HealthNotifier, HealthState>(() {
+final healthProvider = AsyncNotifierProvider<HealthNotifier, StepData>(() {
   return HealthNotifier();
 });
