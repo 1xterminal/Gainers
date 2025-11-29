@@ -1,10 +1,9 @@
-import "package:flutter/material.dart";
-import "package:flutter_riverpod/flutter_riverpod.dart";
-import "package:intl/intl.dart";
-import "package:supabase_flutter/supabase_flutter.dart";
-
-import "../providers/weight_provider.dart";
-import "../data/weight_model.dart";
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../profile/providers/profile_provider.dart';
+import '../providers/weight_provider.dart';
+import '../../../core/widgets/horizontal_date_wheel.dart';
 
 class WeightLogScreen extends ConsumerStatefulWidget {
   const WeightLogScreen({super.key});
@@ -16,143 +15,494 @@ class WeightLogScreen extends ConsumerStatefulWidget {
 class _WeightLogScreenState extends ConsumerState<WeightLogScreen> {
   @override
   Widget build(BuildContext context) {
-    final weightLogs = ref.watch(weightLogsProvider);
-
-    final logs = weightLogs.value ?? [];
-
-    if (logs.isEmpty) {
-      return const Center(child: Text('Weight Logs are empty'));
-    } else if (weightLogs.hasError) {
-      return Center(
-        child: Text('Error while fetching weight logs: ${weightLogs.error}'),
-      );
-    }
-
-    if (weightLogs.isLoading) {
-      return const Center(child: CircularProgressIndicator());
-    }
+    final userId = Supabase.instance.client.auth.currentUser?.id;
+    final profileAsync = ref.watch(getProfileProvider(userId ?? ''));
+    final latestLogAsync = ref.watch(latestWeightLogProvider);
 
     return Scaffold(
-			appBar: AppBar(title: const Text('Weight Logs')),
-			body: ListView.separated(
-				itemCount: logs.length,
-				separatorBuilder: (context, index) => const Divider(
-					height: 1,
-					indent: 16,
-					color: Color.fromARGB(64, 128, 128, 128),
-					endIndent: 16,
-				),
-				itemBuilder: (context, index) => Dismissible(
-					key: Key(logs[index].id.toString()),
-					direction: DismissDirection.endToStart,
-					background: Container(
-						color: Colors.red,
-						alignment: Alignment.centerRight,
-						padding: const EdgeInsets.only(right: 20),
-						child: const Icon(Icons.delete, color: Colors.white),
-					),
-					onDismissed: (direction) {
-						if (logs[index].id != null) {
-							ref.read(weightLogsProvider.notifier).deleteLog(logs[index].id!);
-							ScaffoldMessenger.of(
-								context,
-							).showSnackBar(SnackBar(content: Text('Log successfully deleted')));
-						}
-					},
-					child: ListTile(
-						title: Text(
-							'${logs[index].weight_kg} kg',
-							style: TextStyle(fontWeight: FontWeight.bold),
-						),
-						trailing: Text(
-							DateFormat('dd MMM yyyy').format(logs[index].createdAt),
-						),
-						onTap: () => _showModalSheet(context, ref, log: logs[index]),
-					),
-				),
-			),
-			floatingActionButton: FloatingActionButton(
-          onPressed: () => _showModalSheet(context, ref),
-          tooltip: 'Add Weight',
-          child: const Icon(Icons.add),
-        )
-		);
-  }
-
-  void _showModalSheet(BuildContext context, WidgetRef ref, {WeightLog? log}) {
-    final weightCtrl = TextEditingController(
-      text: log?.weight_kg.toString() ?? '',
-    );
-
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      backgroundColor: Colors.black,
+      appBar: AppBar(
+        title: const Text('Body composition'),
+        centerTitle: true,
+        backgroundColor: Colors.black,
+        foregroundColor: Colors.white,
+        actions: [
+          IconButton(icon: const Icon(Icons.share), onPressed: () {}),
+          IconButton(icon: const Icon(Icons.bar_chart), onPressed: () {}),
+          IconButton(icon: const Icon(Icons.more_vert), onPressed: () {}),
+        ],
       ),
-      builder: (ctx) => Padding(
-        // title: const Text('Add Weight Log'),
-        padding: EdgeInsets.only(bottom: MediaQuery.of(ctx).viewInsets.bottom),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text(
-                log == null ? 'Add Weight Log' : 'Edit Weight Log',
-                style: Theme.of(context).textTheme.titleLarge,
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 16),
-              TextFormField(
-                controller: weightCtrl,
-                decoration: const InputDecoration(labelText: 'Weight (kg)'),
-                keyboardType: TextInputType.number,
-                autofocus: true,
-              ),
-              const SizedBox(height: 24),
-              ElevatedButton(
-                onPressed: () {
-                  if (weightCtrl.text.isEmpty) return;
+      body: latestLogAsync.when(
+        data: (latestLog) {
+          return profileAsync.when(
+            data: (profile) {
+              // Priority: Latest Log > Profile > 0
+              final weight = latestLog?.weight ?? profile?.weightKg ?? 0.0;
+              final heightCm = profile?.heightCm ?? 0;
+              final heightM = heightCm / 100.0;
+              final bmi = (heightM > 0 && weight > 0) ? weight / (heightM * heightM) : 0.0;
+              
+              final muscle = latestLog?.skeletalMuscle;
+              final fat = latestLog?.bodyFat;
 
-                  final userId = Supabase.instance.client.auth.currentUser?.id;
-                  if (userId == null) return;
+              return Column(
+                children: [
+                  Expanded(
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        children: [
+                          // Main Weight Card
+                          Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.symmetric(vertical: 48, horizontal: 24),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF151515),
+                              borderRadius: BorderRadius.circular(32),
+                            ),
+                            child: Column(
+                              children: [
+                                const Icon(Icons.monitor_weight, color: Colors.green, size: 32),
+                                const SizedBox(height: 16),
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  crossAxisAlignment: CrossAxisAlignment.baseline,
+                                  textBaseline: TextBaseline.alphabetic,
+                                  children: [
+                                    Text(
+                                      weight.toStringAsFixed(1),
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 64,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    const Text(
+                                      'kg',
+                                      style: TextStyle(
+                                        color: Colors.grey,
+                                        fontSize: 24,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 16),
 
-                  final weightLog = WeightLog(
-                    id: log?.id, // Keep ID if editing
-                    userId: userId,
-                    weight_kg: double.tryParse(weightCtrl.text) ?? 0.0,
-                    createdAt: DateTime.now(),
-                  );
+                          // Info Card
+                          Container(
+                            padding: const EdgeInsets.all(24),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF151515),
+                              borderRadius: BorderRadius.circular(32),
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                // BMI Section
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    const Text('BMI >', style: TextStyle(color: Colors.white, fontSize: 16)),
+                                    const Icon(Icons.info_outline, color: Colors.grey, size: 20),
+                                  ],
+                                ),
+                                const SizedBox(height: 8),
+                                Text(bmi.toStringAsFixed(1), style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold)),
+                                const SizedBox(height: 8),
+                                _buildProgressBar(value: (bmi / 40).clamp(0.0, 1.0), color: Colors.green),
+                                const SizedBox(height: 4),
+                                const Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text('18.5', style: TextStyle(color: Colors.grey, fontSize: 12)),
+                                    Text('25.0', style: TextStyle(color: Colors.grey, fontSize: 12)),
+                                  ],
+                                ),
+                                
+                                const SizedBox(height: 24),
+                                const Divider(color: Colors.grey, height: 1),
+                                const SizedBox(height: 24),
 
-                  if (weightLog.id != null) {
-                    ref.read(weightLogsProvider.notifier).updateLog(weightLog);
-                  } else {
-                    ref.read(weightLogsProvider.notifier).addLog(weightLog);
-                  }
-                  Navigator.pop(ctx);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(
-                        'Log successfully ${log == null ? 'added' : 'updated'}',
+                                // Skeletal Muscle Section
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    const Text('Skeletal Muscle >', style: TextStyle(color: Colors.white, fontSize: 16)),
+                                    const Icon(Icons.info_outline, color: Colors.grey, size: 20),
+                                  ],
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  muscle != null ? '${muscle.toStringAsFixed(1)} kg' : '--', 
+                                  style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold)
+                                ),
+                                const SizedBox(height: 8),
+                                _buildProgressBar(
+                                  value: muscle != null ? (muscle / (weight > 0 ? weight : 100)).clamp(0.0, 1.0) : 0.0, 
+                                  color: Colors.blue
+                                ),
+                                
+                                const SizedBox(height: 24),
+                                const Divider(color: Colors.grey, height: 1),
+                                const SizedBox(height: 24),
+
+                                // Body Fat Section
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    const Text('Body Fat >', style: TextStyle(color: Colors.white, fontSize: 16)),
+                                    const Icon(Icons.info_outline, color: Colors.grey, size: 20),
+                                  ],
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  fat != null ? '${fat.toStringAsFixed(1)} %' : '--', 
+                                  style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold)
+                                ),
+                                const SizedBox(height: 8),
+                                _buildProgressBar(
+                                  value: fat != null ? (fat / 50).clamp(0.0, 1.0) : 0.0, 
+                                  color: Colors.orange
+                                ),
+                              ],
+                            ),
+                          ),
+                          
+                          const SizedBox(height: 16),
+                          const Text(
+                            'Body water and basal metabolic rate (BMR) are estimated based on your skeletal muscle and body fat percentage.',
+                            style: TextStyle(color: Colors.grey, fontSize: 12),
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
                       ),
                     ),
-                  );
-                },
-                style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
                   ),
-                ),
-                child: Text(log == null ? 'Add Weight' : 'Save Changes'),
-              ),
-              const SizedBox(height: 16),
-            ],
+                  
+                  // Bottom Button
+                  Padding(
+                    padding: const EdgeInsets.all(24.0),
+                    child: SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: () => _showInputModal(context, weight, muscle, fat),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF2C2C2C),
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+                        ),
+                        child: const Text('Enter data', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                      ),
+                    ),
+                  ),
+                ],
+              );
+            },
+            loading: () => const Center(child: CircularProgressIndicator()),
+            error: (err, stack) => Center(child: Text('Error loading profile: $err', style: const TextStyle(color: Colors.white))),
+          );
+        },
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (err, stack) => Center(child: Text('Error loading weight log: $err', style: const TextStyle(color: Colors.white))),
+      ),
+    );
+  }
+
+  Widget _buildProgressBar({required double value, required Color color}) {
+    return Container(
+      height: 8,
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: Colors.grey[800],
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: FractionallySizedBox(
+        alignment: Alignment.centerLeft,
+        widthFactor: value,
+        child: Container(
+          decoration: BoxDecoration(
+            color: color,
+            borderRadius: BorderRadius.circular(4),
           ),
         ),
       ),
+    );
+  }
+
+  void _showInputModal(BuildContext context, double currentWeight, double? currentMuscle, double? currentFat) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.black,
+      builder: (context) => _WeightInputModal(
+        initialWeight: currentWeight,
+        initialMuscle: currentMuscle,
+        initialFat: currentFat,
+        onSave: (newWeight, newMuscle, newFat, notes) async {
+          final notifier = ref.read(weightProvider.notifier);
+          final userId = Supabase.instance.client.auth.currentUser?.id;
+          
+          await notifier.addLog(
+            weight: newWeight,
+            date: DateTime.now(),
+            skeletalMuscle: newMuscle,
+            bodyFat: newFat,
+            notes: notes,
+          );
+          
+          // Refresh profile to update dashboard
+          if (userId != null) {
+             ref.invalidate(getProfileProvider(userId));
+          }
+          
+          if (mounted) {
+            Navigator.pop(context);
+            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Data saved!')));
+          }
+        },
+      ),
+    );
+  }
+}
+
+class _WeightInputModal extends StatefulWidget {
+  final double initialWeight;
+  final double? initialMuscle;
+  final double? initialFat;
+  final Function(double, double?, double?, String?) onSave;
+
+  const _WeightInputModal({
+    required this.initialWeight,
+    this.initialMuscle,
+    this.initialFat,
+    required this.onSave,
+  });
+
+  @override
+  State<_WeightInputModal> createState() => _WeightInputModalState();
+}
+
+class _WeightInputModalState extends State<_WeightInputModal> {
+  late FixedExtentScrollController _intController;
+  late FixedExtentScrollController _decimalController;
+  late int _selectedInt;
+  late int _selectedDecimal;
+  
+  late TextEditingController _muscleController;
+  late TextEditingController _fatController;
+  late TextEditingController _notesController;
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedInt = widget.initialWeight.floor();
+    _selectedDecimal = ((widget.initialWeight - _selectedInt) * 10).round();
+    if (_selectedInt == 0) _selectedInt = 60; // Default if 0
+
+    _intController = FixedExtentScrollController(initialItem: _selectedInt);
+    _decimalController = FixedExtentScrollController(initialItem: _selectedDecimal);
+    
+    _muscleController = TextEditingController(text: widget.initialMuscle?.toString() ?? '');
+    _fatController = TextEditingController(text: widget.initialFat?.toString() ?? '');
+    _notesController = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    _intController.dispose();
+    _decimalController.dispose();
+    _muscleController.dispose();
+    _fatController.dispose();
+    _notesController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: MediaQuery.of(context).size.height * 0.9,
+      padding: const EdgeInsets.all(16),
+      decoration: const BoxDecoration(
+        color: Colors.black,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      child: Column(
+        children: [
+          const SizedBox(height: 16),
+          const Text('Weight (kg)', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 24),
+          
+          // Wheel Picker
+          Container(
+            height: 200,
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: const Color(0xFF151515),
+              borderRadius: BorderRadius.circular(24),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                // Integer Wheel
+                SizedBox(
+                  width: 70,
+                  child: ListWheelScrollView.useDelegate(
+                    controller: _intController,
+                    itemExtent: 50,
+                    perspective: 0.005,
+                    diameterRatio: 1.2,
+                    physics: const FixedExtentScrollPhysics(),
+                    onSelectedItemChanged: (index) => setState(() => _selectedInt = index),
+                    childDelegate: ListWheelChildBuilderDelegate(
+                      builder: (context, index) {
+                        final isSelected = index == _selectedInt;
+                        return Center(
+                          child: Text(
+                            index.toString(),
+                            style: TextStyle(
+                              fontSize: isSelected ? 32 : 24,
+                              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                              color: isSelected ? Colors.white : Colors.grey[700],
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                const Text('.', style: TextStyle(color: Colors.white, fontSize: 32, fontWeight: FontWeight.bold)),
+                const SizedBox(width: 10),
+                // Decimal Wheel
+                SizedBox(
+                  width: 50,
+                  child: ListWheelScrollView.useDelegate(
+                    controller: _decimalController,
+                    itemExtent: 50,
+                    perspective: 0.005,
+                    diameterRatio: 1.2,
+                    physics: const FixedExtentScrollPhysics(),
+                    onSelectedItemChanged: (index) => setState(() => _selectedDecimal = index),
+                    childDelegate: ListWheelChildBuilderDelegate(
+                      builder: (context, index) {
+                        if (index > 9) return null;
+                        final isSelected = index == _selectedDecimal;
+                        return Center(
+                          child: Text(
+                            index.toString(),
+                            style: TextStyle(
+                              fontSize: isSelected ? 32 : 24,
+                              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                              color: isSelected ? Colors.white : Colors.grey[700],
+                            ),
+                          ),
+                        );
+                      },
+                      childCount: 10,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          
+          const SizedBox(height: 16),
+          
+          // Extra Fields
+          Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: const Color(0xFF151515),
+              borderRadius: BorderRadius.circular(24),
+            ),
+            child: Column(
+              children: [
+                _buildTextField('Skeletal muscle (kg)', _muscleController),
+                const SizedBox(height: 16),
+                const Divider(color: Colors.grey, height: 1),
+                const SizedBox(height: 16),
+                _buildTextField('Body fat (%)', _fatController),
+              ],
+            ),
+          ),
+          
+          const SizedBox(height: 16),
+          
+          // Notes
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+            decoration: BoxDecoration(
+              color: const Color(0xFF151515),
+              borderRadius: BorderRadius.circular(24),
+            ),
+            child: TextField(
+              controller: _notesController,
+              decoration: const InputDecoration(
+                icon: Icon(Icons.notes, color: Colors.grey),
+                hintText: 'Notes',
+                hintStyle: TextStyle(color: Colors.grey),
+                border: InputBorder.none,
+              ),
+              style: const TextStyle(color: Colors.white),
+            ),
+          ),
+          
+          const Spacer(),
+          
+          // Buttons
+          Row(
+            children: [
+              Expanded(
+                child: TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('Cancel', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: () {
+                    final weight = _selectedInt + (_selectedDecimal / 10.0);
+                    final muscle = double.tryParse(_muscleController.text);
+                    final fat = double.tryParse(_fatController.text);
+                    final notes = _notesController.text;
+                    widget.onSave(weight, muscle, fat, notes);
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF2C2C2C),
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+                  ),
+                  child: const Text('Save', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTextField(String label, TextEditingController controller) {
+    return TextField(
+      controller: controller,
+      decoration: InputDecoration(
+        labelText: label,
+        labelStyle: const TextStyle(color: Colors.grey),
+        border: InputBorder.none,
+        contentPadding: EdgeInsets.zero,
+        isDense: true,
+      ),
+      style: const TextStyle(color: Colors.white, fontSize: 18),
+      keyboardType: const TextInputType.numberWithOptions(decimal: true),
     );
   }
 }
