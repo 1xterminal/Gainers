@@ -33,28 +33,70 @@ class NutritionNotifier extends AsyncNotifier<List<FoodLog>> {
   DateTime get selectedDate => _selectedDate;
 
   Future<void> addLog(FoodLog log) async {
-    state = const AsyncValue.loading();
-    state = await AsyncValue.guard(() async {
+    final previousState = state;
+    // Optimistic update
+    if (state.hasValue) {
+      final currentLogs = state.value!;
+      state = AsyncValue.data([...currentLogs, log]);
+    }
+
+    try {
       await _repo.addFoodLog(log);
-      return _loadFoodLogs();
-    });
+      // Silent reload to get the real ID and ensure consistency
+      final freshLogs = await _repo.getFoodLogs(_selectedDate);
+      state = AsyncValue.data(freshLogs);
+    } catch (e, st) {
+      // Revert on error
+      state = previousState;
+      state = AsyncValue.error(e, st);
+    }
   }
 
   Future<void> deleteLog(int id) async {
-    // Optimistic update (optional) or just reload
-    state = const AsyncValue.loading();
-    state = await AsyncValue.guard(() async {
+    final previousState = state;
+    // Optimistic update
+    if (state.hasValue) {
+      final currentLogs = state.value!;
+      state = AsyncValue.data(
+        currentLogs.where((log) => log.id != id).toList(),
+      );
+    }
+
+    try {
       await _repo.deleteFoodLog(id);
-      return _loadFoodLogs();
-    });
+      // Silent reload
+      final freshLogs = await _repo.getFoodLogs(_selectedDate);
+      state = AsyncValue.data(freshLogs);
+    } catch (e, st) {
+      // Revert on error
+      state = previousState;
+      state = AsyncValue.error(e, st);
+    }
   }
 
   Future<void> updateLog(FoodLog log) async {
-    state = const AsyncValue.loading();
-    state = await AsyncValue.guard(() async {
+    final previousState = state;
+    // Optimistic update
+    if (state.hasValue) {
+      final currentLogs = state.value!;
+      final index = currentLogs.indexWhere((l) => l.id == log.id);
+      if (index != -1) {
+        final updatedLogs = List<FoodLog>.from(currentLogs);
+        updatedLogs[index] = log;
+        state = AsyncValue.data(updatedLogs);
+      }
+    }
+
+    try {
       await _repo.updateFoodLog(log);
-      return _loadFoodLogs();
-    });
+      // Silent reload
+      final freshLogs = await _repo.getFoodLogs(_selectedDate);
+      state = AsyncValue.data(freshLogs);
+    } catch (e, st) {
+      // Revert on error
+      state = previousState;
+      state = AsyncValue.error(e, st);
+    }
   }
 }
 

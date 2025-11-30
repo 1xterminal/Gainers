@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/nutrition_provider.dart';
-import '../data/food_model.dart';
-import 'meal_detail_screen.dart';
 import 'nutrition_detail_screen.dart';
 import '../../../core/widgets/horizontal_date_wheel.dart';
 import 'widgets/macro_pie_chart.dart';
+import 'widgets/meal_card.dart';
 import '../../../core/widgets/animated_counter.dart';
 
 class NutritionScreen extends ConsumerWidget {
@@ -109,10 +108,10 @@ class NutritionScreen extends ConsumerWidget {
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Column(
                 children: [
-                  _buildMealCard(context, 'Breakfast', logs, ref),
-                  _buildMealCard(context, 'Lunch', logs, ref),
-                  _buildMealCard(context, 'Dinner', logs, ref),
-                  _buildMealCard(context, 'Snack', logs, ref),
+                  MealCard(title: 'Breakfast', logs: logs),
+                  MealCard(title: 'Lunch', logs: logs),
+                  MealCard(title: 'Dinner', logs: logs),
+                  MealCard(title: 'Snack', logs: logs),
                 ],
               ),
             ),
