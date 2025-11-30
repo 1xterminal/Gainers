@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:gainers/features/activity/data/models/fitness_video_model.dart';
 import 'package:gainers/features/activity/providers/exercise_tutorial_provider.dart';
-import 'package:gainers/core/theme/app_theme.dart';
+import 'package:gainers/core/widgets/custom_text_field.dart';
 
 class ExerciseTutorialScreen extends ConsumerStatefulWidget {
   const ExerciseTutorialScreen({super.key});
@@ -84,98 +85,54 @@ class _ExerciseTutorialScreenState
 
     //themes
     final theme = Theme.of(context);
-    final barTheme = Theme.of(context).extension<BarChartTheme>()!;
 
     return Scaffold(
       body: CustomScrollView(
         slivers: [
           // -- app bar --
+          // -- app bar --
           SliverAppBar(
-            expandedHeight: 120,
             floating: true,
             pinned: true,
             backgroundColor: theme.scaffoldBackgroundColor,
             elevation: 0,
-            flexibleSpace: FlexibleSpaceBar(
-              titlePadding: const EdgeInsets.only(left: 24, bottom: 16),
-              title: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Here\'s Some',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: Colors.grey.shade600,
-                      fontSize: 12,
-                    ),
-                  ),
-                  Text(
-                    'Resources',
-                    style: theme.textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: theme.primaryColor,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            actions: [
-              Padding(
-                padding: const EdgeInsets.only(right: 16),
-                child: CircleAvatar(
-                  backgroundColor: theme.primaryColor.withValues(alpha: 0.1),
-                  child: IconButton(
-                    icon: Icon(
-                      Icons.notifications_none,
-                      color: theme.primaryColor,
-                    ),
-                    onPressed: () {
-                      // TODO: implement notification
-                    },
-                  ),
+            title: Padding(
+              padding: const EdgeInsets.only(left: 8.0),
+              child: SvgPicture.asset(
+                'images/Logo-Gainers.svg',
+                height: 24,
+                colorFilter: ColorFilter.mode(
+                  theme.primaryColor,
+                  BlendMode.srcIn,
                 ),
               ),
-            ],
+            ),
+            centerTitle: false,
+          ),
+
+          // -- header --
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(24, 16, 24, 0),
+              child: Text(
+                'Resources',
+                style: theme.textTheme.displaySmall?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: theme.primaryColor,
+                ),
+              ),
+            ),
           ),
 
           // -- search bar --
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 20),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: barTheme.gridColor,
-                  borderRadius: BorderRadius.circular(20),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.blueGrey.withValues(alpha: 0.2),
-                      blurRadius: 4,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: TextField(
-                  controller: _searchController,
-                  decoration: InputDecoration(
-                    hintText: 'Search for exercises',
-                    hintStyle: TextStyle(color: barTheme.labelStyle.color),
-                    suffixIcon: IconButton(
-                      icon: Icon(
-                        Icons.search,
-                        color: barTheme.labelStyle.color,
-                      ),
-                      onPressed: () {
-                        _performSearch();
-                      },
-                    ),
-                    border: InputBorder.none,
-                    contentPadding: const EdgeInsets.symmetric(
-                      vertical: 15,
-                      horizontal: 16,
-                    ),
-                  ),
-                  onSubmitted: (_) => _performSearch(),
-                ),
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+              child: CustomTextField(
+                controller: _searchController,
+                label: 'Search for exercises',
+                prefixIcon: Icons.search,
+                onSubmitted: (_) => _performSearch(),
               ),
             ),
           ),
@@ -198,10 +155,10 @@ class _ExerciseTutorialScreenState
                   final video = videos[index];
                   return Padding(
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
+                      horizontal: 24,
                       vertical: 8,
                     ),
-                    child: _buildVideoCard(video, barTheme),
+                    child: _buildVideoCard(video, theme),
                   );
                 }, childCount: videos.length),
               );
@@ -209,8 +166,8 @@ class _ExerciseTutorialScreenState
             loading: () => const SliverFillRemaining(
               child: Center(child: CircularProgressIndicator()),
             ),
-            error: (error, stack) => const SliverFillRemaining(
-              child: Center(child: Text('No Such Video Exists.')),
+            error: (error, stack) => SliverFillRemaining(
+              child: Center(child: Text('Error: $error')),
             ),
           ),
         ],
@@ -219,23 +176,23 @@ class _ExerciseTutorialScreenState
   }
 
   //helper function to build the video card
-  Widget _buildVideoCard(FitnessVideo video, BarChartTheme barTheme) {
+  Widget _buildVideoCard(FitnessVideo video, ThemeData theme) {
     return Container(
       margin: const EdgeInsets.only(bottom: 20),
       decoration: BoxDecoration(
-        color: barTheme.gridColor,
-        borderRadius: BorderRadius.circular(15),
+        color: theme.cardColor,
+        borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.blueGrey.withValues(alpha: 0.2),
-            offset: Offset(0, 2),
-            blurRadius: 4,
+            color: Colors.black.withValues(alpha: 0.05),
+            offset: const Offset(0, 4),
+            blurRadius: 10,
           ),
         ],
       ),
       child: InkWell(
         onTap: () => _launchVideo(video.videoUrl),
-        borderRadius: BorderRadius.circular(15),
+        borderRadius: BorderRadius.circular(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -244,7 +201,7 @@ class _ExerciseTutorialScreenState
               children: [
                 ClipRRect(
                   borderRadius: const BorderRadius.vertical(
-                    top: Radius.circular(15),
+                    top: Radius.circular(16),
                   ),
                   child: AspectRatio(
                     aspectRatio: 16 / 9,
@@ -270,19 +227,12 @@ class _ExerciseTutorialScreenState
                       vertical: 4,
                     ),
                     decoration: BoxDecoration(
-                      color: barTheme.labelStyle.color,
-                      borderRadius: BorderRadius.circular(7),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.blueGrey.withValues(alpha: 0.1),
-                          offset: Offset(0, 2),
-                          blurRadius: 4,
-                        ),
-                      ],
+                      color: Colors.black.withValues(alpha: 0.7),
+                      borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
                       video.duration ?? '??:??',
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.bold,
                         color: Colors.white,
@@ -303,10 +253,8 @@ class _ExerciseTutorialScreenState
                     video.title,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: 18,
+                    style: theme.textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.bold,
-                      color: barTheme.labelStyle.color,
                       height: 1.2,
                     ),
                   ),
@@ -318,18 +266,16 @@ class _ExerciseTutorialScreenState
                       Expanded(
                         child: Text(
                           video.channelName,
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: Colors.blueGrey.shade300,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: Colors.grey,
                           ),
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
                       Text(
                         _timeAgo(video.publishDate),
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.blueGrey.shade300,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: Colors.grey,
                         ),
                       ),
                     ],

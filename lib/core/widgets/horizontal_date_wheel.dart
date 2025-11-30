@@ -61,6 +61,7 @@ class _HorizontalDateWheelState extends State<HorizontalDateWheel> {
             widget.onDateSelected(newDate);
           },
           childDelegate: ListWheelChildBuilderDelegate(
+            childCount: _initialItem + 1,
             builder: (context, index) {
               final daysDifference = index - _initialItem;
               final date = DateTime.now().add(Duration(days: daysDifference));

@@ -425,8 +425,7 @@ class MealDetailScreen extends ConsumerWidget {
                   fat: int.tryParse(fatCtrl.text) ?? 0,
                   mealType: mealType,
                   createdAt:
-                      existingLog?.createdAt ??
-                      ref.read(nutritionProvider.notifier).selectedDate,
+                      existingLog?.createdAt ?? ref.read(nutritionDateProvider),
                 );
 
                 if (existingLog == null) {

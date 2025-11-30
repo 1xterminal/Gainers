@@ -19,8 +19,10 @@ class _SleepGoalScreenState extends ConsumerState<SleepGoalScreen> {
   void initState() {
     super.initState();
     _hourController = FixedExtentScrollController(initialItem: _selectedHour);
-    _minuteController = FixedExtentScrollController(initialItem: _selectedMinute);
-    
+    _minuteController = FixedExtentScrollController(
+      initialItem: _selectedMinute,
+    );
+
     // Load existing goal
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final goal = ref.read(sleepGoalProvider).value;
@@ -57,7 +59,11 @@ class _SleepGoalScreenState extends ConsumerState<SleepGoalScreen> {
           const SizedBox(height: 48),
           const Text(
             'How much sleep do you need?',
-            style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+            ),
           ),
           const SizedBox(height: 8),
           const Text(
@@ -65,7 +71,7 @@ class _SleepGoalScreenState extends ConsumerState<SleepGoalScreen> {
             style: TextStyle(color: Colors.grey, fontSize: 14),
           ),
           const SizedBox(height: 48),
-          
+
           // Time Wheel
           Container(
             height: 200,
@@ -89,7 +95,8 @@ class _SleepGoalScreenState extends ConsumerState<SleepGoalScreen> {
                         perspective: 0.005,
                         diameterRatio: 1.2,
                         physics: const FixedExtentScrollPhysics(),
-                        onSelectedItemChanged: (index) => setState(() => _selectedHour = index),
+                        onSelectedItemChanged: (index) =>
+                            setState(() => _selectedHour = index),
                         childDelegate: ListWheelChildBuilderDelegate(
                           builder: (context, index) {
                             final isSelected = index == _selectedHour;
@@ -98,8 +105,12 @@ class _SleepGoalScreenState extends ConsumerState<SleepGoalScreen> {
                                 index.toString(),
                                 style: TextStyle(
                                   fontSize: isSelected ? 32 : 20,
-                                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                                  color: isSelected ? Colors.white : Colors.grey[800],
+                                  fontWeight: isSelected
+                                      ? FontWeight.bold
+                                      : FontWeight.normal,
+                                  color: isSelected
+                                      ? Colors.white
+                                      : Colors.grey[800],
                                 ),
                               ),
                             );
@@ -108,9 +119,16 @@ class _SleepGoalScreenState extends ConsumerState<SleepGoalScreen> {
                         ),
                       ),
                     ),
-                    const Text('h', style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
+                    const Text(
+                      'h',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                     const SizedBox(width: 24),
-                    
+
                     // Minutes
                     SizedBox(
                       width: 70,
@@ -120,7 +138,8 @@ class _SleepGoalScreenState extends ConsumerState<SleepGoalScreen> {
                         perspective: 0.005,
                         diameterRatio: 1.2,
                         physics: const FixedExtentScrollPhysics(),
-                        onSelectedItemChanged: (index) => setState(() => _selectedMinute = index),
+                        onSelectedItemChanged: (index) =>
+                            setState(() => _selectedMinute = index),
                         childDelegate: ListWheelChildBuilderDelegate(
                           builder: (context, index) {
                             final isSelected = index == _selectedMinute;
@@ -129,8 +148,12 @@ class _SleepGoalScreenState extends ConsumerState<SleepGoalScreen> {
                                 index.toString().padLeft(2, '0'),
                                 style: TextStyle(
                                   fontSize: isSelected ? 32 : 20,
-                                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                                  color: isSelected ? Colors.white : Colors.grey[800],
+                                  fontWeight: isSelected
+                                      ? FontWeight.bold
+                                      : FontWeight.normal,
+                                  color: isSelected
+                                      ? Colors.white
+                                      : Colors.grey[800],
                                 ),
                               ),
                             );
@@ -139,15 +162,22 @@ class _SleepGoalScreenState extends ConsumerState<SleepGoalScreen> {
                         ),
                       ),
                     ),
-                    const Text('m', style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
+                    const Text(
+                      'm',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ],
                 ),
               ],
             ),
           ),
-          
+
           const Spacer(),
-          
+
           Padding(
             padding: const EdgeInsets.all(24.0),
             child: SizedBox(
@@ -155,10 +185,16 @@ class _SleepGoalScreenState extends ConsumerState<SleepGoalScreen> {
               child: ElevatedButton(
                 onPressed: () async {
                   final totalMinutes = (_selectedHour * 60) + _selectedMinute;
-                  await ref.read(sleepProvider.notifier).setGoal(totalMinutes);
+                  final navigator = Navigator.of(context);
+                  final messenger = ScaffoldMessenger.of(context);
+
+                  await ref
+                      .read(sleepGoalProvider.notifier)
+                      .setGoal(totalMinutes);
+
                   if (mounted) {
-                    Navigator.pop(context);
-                    ScaffoldMessenger.of(context).showSnackBar(
+                    navigator.pop();
+                    messenger.showSnackBar(
                       const SnackBar(content: Text('Sleep goal saved!')),
                     );
                   }
@@ -167,9 +203,14 @@ class _SleepGoalScreenState extends ConsumerState<SleepGoalScreen> {
                   backgroundColor: const Color(0xFF8B5CF6), // Violet
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(24),
+                  ),
                 ),
-                child: const Text('Save Goal', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                child: const Text(
+                  'Save Goal',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
               ),
             ),
           ),

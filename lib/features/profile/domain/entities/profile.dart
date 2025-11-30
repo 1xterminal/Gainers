@@ -9,6 +9,7 @@ class Profile {
   final double? weightKg;
   final String? activityGoal;
   final String? unitPreference;
+  final int? hydrationTarget;
 
   Profile({
     required this.id,
@@ -21,6 +22,7 @@ class Profile {
     this.weightKg,
     this.activityGoal,
     this.unitPreference,
+    this.hydrationTarget,
   });
 
   factory Profile.fromJson(Map<String, dynamic> json) {
@@ -37,6 +39,7 @@ class Profile {
       weightKg: json['weight_kg']?.toDouble(),
       activityGoal: json['activity_goal'],
       unitPreference: json['unit_preference'],
+      hydrationTarget: json['hydration_target'],
     );
   }
 
@@ -52,7 +55,7 @@ class Profile {
       'weight_kg': weightKg,
       'activity_goal': activityGoal,
       'unit_preference': unitPreference,
+      'hydration_target': hydrationTarget,
     };
   }
 }
-

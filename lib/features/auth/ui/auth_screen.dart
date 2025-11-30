@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:gainers/core/widgets/custom_button.dart';
+import 'package:gainers/core/widgets/custom_text_field.dart';
 import 'package:gainers/features/auth/providers/auth_provider.dart';
-import 'package:gainers/features/dashboard/ui/dashboard_screen.dart';
 import 'package:gainers/features/profile/ui/profile_setup_screen.dart';
 import 'package:gainers/features/auth/ui/email_confirmation_screen.dart';
+import 'package:gainers/layout/main_layout.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 class AuthScreen extends ConsumerStatefulWidget {
   const AuthScreen({super.key});
@@ -104,13 +107,11 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
           title: const Text('Reset Password'),
           content: Form(
             key: dialogFormKey,
-            child: TextFormField(
+            child: CustomTextField(
               controller: emailController,
-              decoration: const InputDecoration(
-                labelText: 'Email',
-                hintText: 'Enter your email',
-                prefixIcon: Icon(Icons.email_outlined),
-              ),
+              label: 'Email',
+              hint: 'Enter your email',
+              prefixIcon: Icons.email_outlined,
               validator: _validateEmail,
               keyboardType: TextInputType.emailAddress,
             ),
@@ -208,7 +209,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
 
         if (next.value?.isProfileComplete == true) {
           Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (context) => const DashboardScreen()),
+            MaterialPageRoute(builder: (context) => const MainLayout()),
           );
         } else if (_isLogin) {
           Navigator.of(context).pushReplacement(
@@ -220,210 +221,164 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
 
     final authState = ref.watch(authNotifierProvider);
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
 
     return Scaffold(
-      // Extend body behind app bar if we had one, but we'll use a custom header
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [theme.primaryColor, theme.colorScheme.secondary],
-            stops: const [0.0, 1.0],
-          ),
-        ),
-        child: SafeArea(
-          child: Center(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(24.0),
+      body: SafeArea(
+        child: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 24.0),
+            child: Form(
+              key: _formKey,
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  // --- Logo / Icon ---
-                  Container(
-                    padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.2),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.fitness_center,
-                      size: 64,
-                      color: Colors.white,
+                  // --- Header ---
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: SvgPicture.asset(
+                      'images/Logo-Gainers.svg',
+                      height: 40,
+                      colorFilter: ColorFilter.mode(
+                        Colors.grey,
+                        BlendMode.srcIn,
+                      ),
                     ),
                   ),
                   const SizedBox(height: 24),
-
-                  // --- App Title ---
                   Text(
-                    'GAINERS',
-                    style: theme.textTheme.displayMedium?.copyWith(
-                      color: Colors.white,
-                      letterSpacing: 2.0,
+                    _isLogin ? 'Welcome\nBack' : 'Create an\nAccount',
+                    style: theme.textTheme.displaySmall?.copyWith(
+                      color: isDark ? Colors.white : Colors.black87,
+                      fontWeight: FontWeight.bold,
+                      height: 1.1,
                     ),
                   ),
                   const SizedBox(height: 48),
 
-                  // --- Auth Card ---
-                  Card(
-                    elevation: 8,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(24),
+                  // --- Inputs ---
+                  if (!_isLogin) ...[
+                    CustomTextField(
+                      controller: _usernameController,
+                      label: 'Username',
+                      hint: 'Choose a username',
+                      prefixIcon: Icons.person_outline,
+                      validator: _validateUsername,
+                      enabled: !authState.isLoading,
                     ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(32.0),
-                      child: Form(
-                        key: _formKey,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [
-                            Text(
-                              _isLogin ? 'Welcome Back' : 'Create Account',
-                              style: theme.textTheme.headlineMedium,
-                              textAlign: TextAlign.center,
-                            ),
-                            const SizedBox(height: 32),
+                    const SizedBox(height: 16),
+                  ],
 
-                            if (!_isLogin) ...[
-                              TextFormField(
-                                controller: _usernameController,
-                                decoration: const InputDecoration(
-                                  labelText: 'Username',
-                                  hintText: 'Choose a username',
-                                  prefixIcon: Icon(Icons.person_outline),
-                                ),
-                                validator: _validateUsername,
-                                enabled: !authState.isLoading,
-                              ),
-                              const SizedBox(height: 16),
-                            ],
+                  CustomTextField(
+                    controller: _emailController,
+                    label: 'Email',
+                    hint: 'Enter your email',
+                    prefixIcon: Icons.email_outlined,
+                    validator: _validateEmail,
+                    keyboardType: TextInputType.emailAddress,
+                    enabled: !authState.isLoading,
+                  ),
+                  const SizedBox(height: 16),
 
-                            TextFormField(
-                              controller: _emailController,
-                              decoration: const InputDecoration(
-                                labelText: 'Email',
-                                hintText: 'Enter your email',
-                                prefixIcon: Icon(Icons.email_outlined),
-                              ),
-                              keyboardType: TextInputType.emailAddress,
-                              validator: _validateEmail,
-                              enabled: !authState.isLoading,
-                            ),
-                            const SizedBox(height: 16),
+                  CustomTextField(
+                    controller: _passwordController,
+                    label: 'Password',
+                    hint: 'Enter your password',
+                    prefixIcon: Icons.lock_outline,
+                    obscureText: _obscurePassword,
+                    validator: _validatePassword,
+                    enabled: !authState.isLoading,
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _obscurePassword
+                            ? Icons.visibility_outlined
+                            : Icons.visibility_off_outlined,
+                        color: Colors.grey,
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          _obscurePassword = !_obscurePassword;
+                        });
+                      },
+                    ),
+                  ),
 
-                            TextFormField(
-                              controller: _passwordController,
-                              decoration: InputDecoration(
-                                labelText: 'Password',
-                                hintText: 'Enter your password',
-                                prefixIcon: const Icon(Icons.lock_outline),
-                                suffixIcon: IconButton(
-                                  icon: Icon(
-                                    _obscurePassword
-                                        ? Icons.visibility_outlined
-                                        : Icons.visibility_off_outlined,
-                                  ),
-                                  onPressed: () {
-                                    setState(() {
-                                      _obscurePassword = !_obscurePassword;
-                                    });
-                                  },
-                                ),
-                              ),
-                              obscureText: _obscurePassword,
-                              validator: _validatePassword,
-                              enabled: !authState.isLoading,
-                            ),
+                  const SizedBox(height: 12),
 
-                            const SizedBox(height: 12),
-
-                            if (_isLogin)
-                              Align(
-                                alignment: Alignment.centerRight,
-                                child: TextButton(
-                                  onPressed: authState.isLoading
-                                      ? null
-                                      : _showForgotPasswordDialog,
-                                  child: const Text('Forgot Password?'),
-                                ),
-                              ),
-
-                            const SizedBox(height: 24),
-
-                            ElevatedButton(
-                              onPressed: authState.isLoading
-                                  ? null
-                                  : _handleSubmit,
-                              child: authState.isLoading
-                                  ? const SizedBox(
-                                      height: 24,
-                                      width: 24,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2,
-                                        valueColor:
-                                            AlwaysStoppedAnimation<Color>(
-                                              Colors.white,
-                                            ),
-                                      ),
-                                    )
-                                  : Text(_isLogin ? 'LOGIN' : 'REGISTER'),
-                            ),
-
-                            const SizedBox(height: 24),
-
-                            const Row(
-                              children: [
-                                Expanded(child: Divider()),
-                                Padding(
-                                  padding: EdgeInsets.symmetric(horizontal: 16),
-                                  child: Text(
-                                    'OR',
-                                    style: TextStyle(color: Colors.grey),
-                                  ),
-                                ),
-                                Expanded(child: Divider()),
-                              ],
-                            ),
-
-                            const SizedBox(height: 24),
-
-                            OutlinedButton.icon(
-                              onPressed: authState.isLoading
-                                  ? null
-                                  : () {
-                                      ref
-                                          .read(authNotifierProvider.notifier)
-                                          .signInWithGoogle();
-                                    },
-                              icon: Image.network(
-                                'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c1/Google_%22G%22_logo.svg/1200px-Google_%22G%22_logo.svg.png',
-                                height: 24,
-                                width: 24,
-                                errorBuilder: (context, error, stackTrace) =>
-                                    const Icon(Icons.login),
-                              ),
-                              label: const Text('Sign in with Google'),
-                            ),
-                          ],
-                        ),
+                  if (_isLogin)
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: TextButton(
+                        onPressed: authState.isLoading
+                            ? null
+                            : _showForgotPasswordDialog,
+                        child: const Text('Forgot Password?'),
                       ),
                     ),
+
+                  const SizedBox(height: 32),
+
+                  // --- Buttons ---
+                  PrimaryButton(
+                    label: _isLogin ? 'Login' : 'Register',
+                    isLoading: authState.isLoading,
+                    onPressed: _handleSubmit,
                   ),
 
                   const SizedBox(height: 24),
 
-                  // --- Toggle Login/Register ---
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Divider(
+                          color: isDark ? Colors.white24 : Colors.black12,
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16),
+                        child: Text(
+                          'or',
+                          style: TextStyle(
+                            color: isDark ? Colors.white60 : Colors.black54,
+                          ),
+                        ),
+                      ),
+                      Expanded(
+                        child: Divider(
+                          color: isDark ? Colors.white24 : Colors.black12,
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  GoogleSignInButton(
+                    isLoading: authState.isLoading,
+                    onPressed: () {
+                      ref
+                          .read(authNotifierProvider.notifier)
+                          .signInWithGoogle();
+                    },
+                  ),
+
+                  const SizedBox(height: 32),
+
+                  // --- Toggle ---
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
                         _isLogin
-                            ? "Don't have an account?"
-                            : 'Already have an account?',
-                        style: const TextStyle(color: Colors.white70),
+                            ? "Don't have an account? "
+                            : 'Already have an account? ',
+                        style: TextStyle(
+                          color: isDark ? Colors.white70 : Colors.black54,
+                        ),
                       ),
-                      TextButton(
-                        onPressed: authState.isLoading
+                      GestureDetector(
+                        onTap: authState.isLoading
                             ? null
                             : () {
                                 setState(() {
@@ -431,13 +386,27 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                                   _formKey.currentState?.reset();
                                 });
                               },
-                        style: TextButton.styleFrom(
-                          foregroundColor: Colors.white,
-                          textStyle: const TextStyle(
-                            fontWeight: FontWeight.bold,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 6,
+                          ),
+                          decoration: BoxDecoration(
+                            color: isDark
+                                ? Colors.white.withValues(alpha: 0.1)
+                                : const Color(0xFFE0C9BC), // Light brown/beige
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Text(
+                            _isLogin ? 'Register Here' : 'Login here',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: isDark
+                                  ? Colors.white
+                                  : const Color(0xFF5D4037),
+                            ),
                           ),
                         ),
-                        child: Text(_isLogin ? 'Register' : 'Login'),
                       ),
                     ],
                   ),

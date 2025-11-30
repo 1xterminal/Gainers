@@ -1,6 +1,6 @@
-import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:syncfusion_flutter_charts/charts.dart';
 import '../../data/sleep_model.dart';
 
 class SleepConsistencyChart extends StatelessWidget {
@@ -16,99 +16,79 @@ class SleepConsistencyChart extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    
-    // Reverting to Duration Chart as requested.
-    // Y-axis: Hours of sleep.
-    
-    final end = DateTime(selectedDate.year, selectedDate.month, selectedDate.day);
+    final end = DateTime(
+      selectedDate.year,
+      selectedDate.month,
+      selectedDate.day,
+    );
     final start = end.subtract(const Duration(days: 6));
-    
-    List<BarChartGroupData> barGroups = [];
-    double maxDuration = 0;
 
+    // Prepare data for the chart
+    List<_ChartData> chartData = [];
     for (int i = 0; i < 7; i++) {
       final day = start.add(Duration(days: i));
-      
-      // Find logs for this day (checking start_time)
+
+      // Find logs for this day
       final logsForDay = weeklyLogs.where((log) {
-        final logDate = DateTime(log.startTime.year, log.startTime.month, log.startTime.day);
+        final logDate = DateTime(
+          log.startTime.year,
+          log.startTime.month,
+          log.startTime.day,
+        );
         return DateUtils.isSameDay(logDate, day);
       });
-      
-      final totalMinutes = logsForDay.fold<int>(0, (sum, log) => sum + log.durationMinutes);
-      final totalHours = totalMinutes / 60.0;
-      
-      if (totalHours > maxDuration) maxDuration = totalHours;
 
-      final isSelected = DateUtils.isSameDay(day, selectedDate);
-      
-      barGroups.add(
-        BarChartGroupData(
-          x: i,
-          barRods: [
-            BarChartRodData(
-              toY: totalHours,
-              color: isSelected ? const Color(0xFF8B5CF6) : const Color(0xFF8B5CF6).withValues(alpha: 0.3),
-              width: 12,
-              borderRadius: BorderRadius.circular(6),
-              backDrawRodData: BackgroundBarChartRodData(
-                show: true,
-                toY: 12, // Max expected sleep, e.g., 12 hours
-                color: Colors.grey.withValues(alpha: 0.1),
-              ),
-            ),
-          ],
-        ),
+      final totalMinutes = logsForDay.fold<int>(
+        0,
+        (sum, log) => sum + log.durationMinutes,
       );
+      final totalHours = totalMinutes / 60.0;
+
+      chartData.add(_ChartData(day, totalHours));
     }
 
-    return AspectRatio(
-      aspectRatio: 1.5,
-      child: BarChart(
-        BarChartData(
-          alignment: BarChartAlignment.spaceAround,
-          maxY: 12, // Fixed max Y for consistency
-          barTouchData: BarTouchData(
-            enabled: false, // Disable touch for now as it's just visual
-          ),
-          titlesData: FlTitlesData(
-            show: true,
-            bottomTitles: AxisTitles(
-              sideTitles: SideTitles(
-                showTitles: true,
-                getTitlesWidget: (value, meta) {
-                  final index = value.toInt();
-                  if (index < 0 || index >= 7) return const SizedBox.shrink();
-                  final day = start.add(Duration(days: index));
-                  return Padding(
-                    padding: const EdgeInsets.only(top: 8.0),
-                    child: Text(
-                      DateFormat('d').format(day),
-                      style: TextStyle(
-                        color: Colors.grey,
-                        fontSize: 12,
-                        fontWeight: DateUtils.isSameDay(day, selectedDate) ? FontWeight.bold : FontWeight.normal,
-                      ),
-                    ),
-                  );
-                },
-                reservedSize: 30,
-              ),
-            ),
-            leftTitles: const AxisTitles(
-              sideTitles: SideTitles(showTitles: false),
-            ),
-            topTitles: const AxisTitles(
-              sideTitles: SideTitles(showTitles: false),
-            ),
-            rightTitles: const AxisTitles(
-              sideTitles: SideTitles(showTitles: false),
-            ),
-          ),
-          gridData: const FlGridData(show: false),
-          borderData: FlBorderData(show: false),
-        ),
+    return SfCartesianChart(
+      plotAreaBorderWidth: 0,
+      primaryXAxis: DateTimeAxis(
+        majorGridLines: const MajorGridLines(width: 0),
+        intervalType: DateTimeIntervalType.days,
+        interval: 1,
+        dateFormat: DateFormat('d'),
+        labelStyle: const TextStyle(color: Colors.grey, fontSize: 12),
+        minimum: start,
+        maximum: end,
       ),
+      primaryYAxis: NumericAxis(
+        minimum: 0,
+        maximum: 12, // Assuming 12 hours max for better scale
+        interval: 3,
+        axisLine: const AxisLine(width: 0),
+        majorTickLines: const MajorTickLines(size: 0),
+        labelStyle: const TextStyle(color: Colors.grey, fontSize: 12),
+      ),
+      tooltipBehavior: TooltipBehavior(
+        enable: true,
+        header: '',
+        format: 'point.y h',
+      ),
+      series: <CartesianSeries<_ChartData, DateTime>>[
+        SplineSeries<_ChartData, DateTime>(
+          dataSource: chartData,
+          xValueMapper: (_ChartData data, _) => data.date,
+          yValueMapper: (_ChartData data, _) => data.hours,
+          color: theme.primaryColor,
+          width: 4,
+          markerSettings: const MarkerSettings(isVisible: true),
+          name: 'Sleep',
+        ),
+      ],
     );
   }
+}
+
+class _ChartData {
+  final DateTime date;
+  final double hours;
+
+  _ChartData(this.date, this.hours);
 }

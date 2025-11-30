@@ -13,6 +13,8 @@ import 'package:gainers/features/hydration/providers/hydration_provider.dart';
 import 'package:gainers/features/hydration/ui/hydration_screen.dart';
 import 'package:intl/intl.dart';
 
+import 'package:gainers/features/sleep/providers/sleep_provider.dart';
+
 class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
 
@@ -23,7 +25,14 @@ class DashboardScreen extends ConsumerWidget {
     final healthAsync = ref.watch(healthProvider);
     final nutritionAsync = ref.watch(nutritionProvider);
     final hydrationAsync = ref.watch(hydrationProvider);
+
+    // Watch sleep logs for today
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final sleepAsync = ref.watch(weeklySleepLogsProvider(today));
+
     final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
 
     // Calculate Nutrition Data
     final int consumedCalories =
@@ -36,78 +45,48 @@ class DashboardScreen extends ConsumerWidget {
 
     // Calculate Activity Data
     final int steps = healthAsync.value?.todaysSteps ?? 0;
-    final double distanceKm = (steps * 0.762) / 1000; // Approx 0.762m per step
-    final int burnedCalories = (steps * 0.04)
-        .round(); // Approx 0.04 kcal per step
-    final double stepProgress = (steps / 10000).clamp(
-      0.0,
-      1.0,
-    ); // Target 10,000 steps
+    final double distanceKm = (steps * 0.762) / 1000;
+    final int burnedCalories = (steps * 0.04).round();
+    final double stepProgress = (steps / 10000).clamp(0.0, 1.0);
 
     return Scaffold(
       body: CustomScrollView(
         slivers: [
-          // --- Premium App Bar ---
-          SliverAppBar(
-            expandedHeight: 120.0,
-            floating: true,
-            pinned: true,
-            backgroundColor: theme.scaffoldBackgroundColor,
-            elevation: 0,
-            flexibleSpace: FlexibleSpaceBar(
-              titlePadding: const EdgeInsets.only(left: 24, bottom: 16),
-              title: profileAsync.when(
-                data: (profile) {
-                  final name =
-                      profile?.displayName ?? profile?.username ?? 'Gainer';
-                  return Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Good Morning,',
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: Colors.grey[600],
-                          fontSize: 12,
-                        ),
-                      ),
-                      Text(
-                        name,
-                        style: theme.textTheme.headlineSmall?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: theme.primaryColor,
-                        ),
-                      ),
-                    ],
-                  );
-                },
-                loading: () => const SizedBox.shrink(),
-                error: (_, __) => const Text('Welcome'),
-              ),
-            ),
-            actions: [
-              Padding(
-                padding: const EdgeInsets.only(right: 16.0),
-                child: CircleAvatar(
-                  backgroundColor: theme.primaryColor.withValues(alpha: 0.1),
-                  child: IconButton(
-                    icon: Icon(
-                      Icons.notifications_none,
-                      color: theme.primaryColor,
-                    ),
-                    onPressed: () {},
-                  ),
-                ),
-              ),
-            ],
-          ),
-
-          // --- Dashboard Content ---
+          // --- Header ---
           SliverPadding(
-            padding: const EdgeInsets.all(24.0),
+            padding: const EdgeInsets.fromLTRB(24, 60, 24, 24),
             sliver: SliverList(
               delegate: SliverChildListDelegate([
-                // --- Activity Card (Featured) ---
+                profileAsync.when(
+                  data: (profile) {
+                    final name =
+                        profile?.displayName ?? profile?.username ?? 'Gainer';
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Hi, $name!',
+                          style: theme.textTheme.displaySmall?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: theme.primaryColor,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          "Here's your summary",
+                          style: theme.textTheme.bodyLarge?.copyWith(
+                            color: isDark ? Colors.white70 : Colors.black54,
+                          ),
+                        ),
+                      ],
+                    );
+                  },
+                  loading: () => const SizedBox(height: 60),
+                  error: (_, __) => const Text('Welcome'),
+                ),
+                const SizedBox(height: 32),
+
+                // --- Large Summary Card (Activity) ---
                 DashboardCard(
                   gradient: LinearGradient(
                     colors: [theme.primaryColor, theme.colorScheme.secondary],
@@ -132,7 +111,8 @@ class DashboardScreen extends ConsumerWidget {
                             style: TextStyle(
                               color: Colors.white,
                               fontWeight: FontWeight.bold,
-                              fontSize: 16,
+                              fontSize: 18,
+                              fontFamily: 'Lexend',
                             ),
                           ),
                           Container(
@@ -177,6 +157,7 @@ class DashboardScreen extends ConsumerWidget {
                                       color: Colors.white,
                                       fontWeight: FontWeight.bold,
                                       fontSize: 18,
+                                      fontFamily: 'Lexend',
                                     ),
                                   ),
                                 ),
@@ -194,11 +175,15 @@ class DashboardScreen extends ConsumerWidget {
                                     fontSize: 32,
                                     fontWeight: FontWeight.bold,
                                     color: Colors.white,
+                                    fontFamily: 'Lexend',
                                   ),
                                 ),
                                 const Text(
                                   'Steps Taken',
-                                  style: TextStyle(color: Colors.white70),
+                                  style: TextStyle(
+                                    color: Colors.white70,
+                                    fontFamily: 'Lexend',
+                                  ),
                                 ),
                                 const SizedBox(height: 8),
                                 Row(
@@ -214,6 +199,7 @@ class DashboardScreen extends ConsumerWidget {
                                       style: const TextStyle(
                                         color: Colors.white70,
                                         fontSize: 12,
+                                        fontFamily: 'Lexend',
                                       ),
                                     ),
                                     const SizedBox(width: 12),
@@ -228,6 +214,7 @@ class DashboardScreen extends ConsumerWidget {
                                       style: const TextStyle(
                                         color: Colors.white70,
                                         fontSize: 12,
+                                        fontFamily: 'Lexend',
                                       ),
                                     ),
                                   ],
@@ -240,7 +227,6 @@ class DashboardScreen extends ConsumerWidget {
                     ],
                   ),
                 ),
-
                 const SizedBox(height: 24),
 
                 // --- Stats Grid ---
@@ -250,8 +236,9 @@ class DashboardScreen extends ConsumerWidget {
                   crossAxisCount: 2,
                   crossAxisSpacing: 16,
                   mainAxisSpacing: 16,
-                  childAspectRatio: 1.1,
+                  childAspectRatio: 1.0,
                   children: [
+                    // Calories
                     DashboardCard(
                       onTap: () {
                         Navigator.push(
@@ -267,7 +254,7 @@ class DashboardScreen extends ConsumerWidget {
                           Container(
                             padding: const EdgeInsets.all(10),
                             decoration: BoxDecoration(
-                              color: Colors.orange.withValues(alpha: 0.1),
+                              color: const Color(0xFFFFF3E0), // Light Orange
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: const Icon(
@@ -280,6 +267,7 @@ class DashboardScreen extends ConsumerWidget {
                             'Calories',
                             style: theme.textTheme.bodyMedium?.copyWith(
                               color: Colors.grey,
+                              fontWeight: FontWeight.w500,
                             ),
                           ),
                           const SizedBox(height: 4),
@@ -287,6 +275,7 @@ class DashboardScreen extends ConsumerWidget {
                             text: TextSpan(
                               style: theme.textTheme.titleLarge?.copyWith(
                                 fontWeight: FontWeight.bold,
+                                color: isDark ? Colors.white : Colors.black87,
                               ),
                               children: [
                                 TextSpan(
@@ -299,6 +288,7 @@ class DashboardScreen extends ConsumerWidget {
                                   style: TextStyle(
                                     fontSize: 14,
                                     color: Colors.grey[400],
+                                    fontWeight: FontWeight.normal,
                                   ),
                                 ),
                               ],
@@ -307,6 +297,8 @@ class DashboardScreen extends ConsumerWidget {
                         ],
                       ),
                     ),
+
+                    // Hydration
                     DashboardCard(
                       onTap: () {
                         Navigator.push(
@@ -322,7 +314,7 @@ class DashboardScreen extends ConsumerWidget {
                           Container(
                             padding: const EdgeInsets.all(10),
                             decoration: BoxDecoration(
-                              color: Colors.blue.withValues(alpha: 0.1),
+                              color: const Color(0xFFE3F2FD), // Light Blue
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: const Icon(
@@ -335,6 +327,7 @@ class DashboardScreen extends ConsumerWidget {
                             'Hydration',
                             style: theme.textTheme.bodyMedium?.copyWith(
                               color: Colors.grey,
+                              fontWeight: FontWeight.w500,
                             ),
                           ),
                           const SizedBox(height: 4),
@@ -342,12 +335,15 @@ class DashboardScreen extends ConsumerWidget {
                             data: (logs) {
                               final total = logs.fold(
                                 0,
-                                (sum, item) => sum + item.amount,
+                                (sum, item) => sum + item.amountMl,
                               );
                               return RichText(
                                 text: TextSpan(
                                   style: theme.textTheme.titleLarge?.copyWith(
                                     fontWeight: FontWeight.bold,
+                                    color: isDark
+                                        ? Colors.white
+                                        : Colors.black87,
                                   ),
                                   children: [
                                     TextSpan(
@@ -359,6 +355,7 @@ class DashboardScreen extends ConsumerWidget {
                                       style: TextStyle(
                                         fontSize: 14,
                                         color: Colors.grey[400],
+                                        fontWeight: FontWeight.normal,
                                       ),
                                     ),
                                   ],
@@ -371,6 +368,8 @@ class DashboardScreen extends ConsumerWidget {
                         ],
                       ),
                     ),
+
+                    // Sleep
                     DashboardCard(
                       onTap: () {
                         Navigator.push(
@@ -386,7 +385,7 @@ class DashboardScreen extends ConsumerWidget {
                           Container(
                             padding: const EdgeInsets.all(10),
                             decoration: BoxDecoration(
-                              color: Colors.purple.withValues(alpha: 0.1),
+                              color: const Color(0xFFF3E5F5), // Light Purple
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: const Icon(
@@ -399,18 +398,43 @@ class DashboardScreen extends ConsumerWidget {
                             'Sleep',
                             style: theme.textTheme.bodyMedium?.copyWith(
                               color: Colors.grey,
+                              fontWeight: FontWeight.w500,
                             ),
                           ),
                           const SizedBox(height: 4),
-                          Text(
-                            '7h 30m',
-                            style: theme.textTheme.titleLarge?.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
+                          sleepAsync.when(
+                            data: (logs) {
+                              // Filter for today's logs (start time is today)
+                              final now = DateTime.now();
+                              final todayLogs = logs.where((log) {
+                                return log.startTime.year == now.year &&
+                                    log.startTime.month == now.month &&
+                                    log.startTime.day == now.day;
+                              });
+
+                              final totalMinutes = todayLogs.fold<int>(
+                                0,
+                                (sum, log) => sum + log.durationMinutes,
+                              );
+                              final hours = totalMinutes ~/ 60;
+                              final minutes = totalMinutes % 60;
+
+                              return Text(
+                                '${hours}h ${minutes}m',
+                                style: theme.textTheme.titleLarge?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  color: isDark ? Colors.white : Colors.black87,
+                                ),
+                              );
+                            },
+                            loading: () => const Text('Loading...'),
+                            error: (_, __) => const Text('--'),
                           ),
                         ],
                       ),
                     ),
+
+                    // Weight
                     DashboardCard(
                       onTap: () {
                         Navigator.push(
@@ -426,7 +450,7 @@ class DashboardScreen extends ConsumerWidget {
                           Container(
                             padding: const EdgeInsets.all(10),
                             decoration: BoxDecoration(
-                              color: Colors.teal.withValues(alpha: 0.1),
+                              color: const Color(0xFFE0F2F1), // Light Teal
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: const Icon(
@@ -439,6 +463,7 @@ class DashboardScreen extends ConsumerWidget {
                             'Weight',
                             style: theme.textTheme.bodyMedium?.copyWith(
                               color: Colors.grey,
+                              fontWeight: FontWeight.w500,
                             ),
                           ),
                           const SizedBox(height: 4),
@@ -446,6 +471,7 @@ class DashboardScreen extends ConsumerWidget {
                             '${profileAsync.value?.weightKg ?? '--'} kg',
                             style: theme.textTheme.titleLarge?.copyWith(
                               fontWeight: FontWeight.bold,
+                              color: isDark ? Colors.white : Colors.black87,
                             ),
                           ),
                         ],
@@ -453,8 +479,7 @@ class DashboardScreen extends ConsumerWidget {
                     ),
                   ],
                 ),
-
-                const SizedBox(height: 80), // Bottom padding for FAB if needed
+                const SizedBox(height: 40),
               ]),
             ),
           ),

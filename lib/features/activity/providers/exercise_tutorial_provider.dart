@@ -6,6 +6,9 @@ import 'package:gainers/features/activity/data/models/fitness_video_model.dart';
 //provider to get youtube api
 final youtubeApiProvider = Provider<YoutubeAPI>((ref) {
   final apiKey = dotenv.env['YOUTUBE_API_KEY'] ?? '';
+  if (apiKey.isEmpty) {
+    throw Exception('YOUTUBE_API_KEY is missing in .env');
+  }
   return YoutubeAPI(apiKey, maxResults: 15, type: 'video');
 });
 

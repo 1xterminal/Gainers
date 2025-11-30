@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
+//import 'package:intl/intl.dart';
 import '../../../core/widgets/horizontal_date_wheel.dart';
 import '../providers/sleep_provider.dart';
 import 'widgets/sleep_input_modal.dart';
@@ -22,7 +22,7 @@ class _SleepLogScreenState extends ConsumerState<SleepLogScreen> {
     final weeklyLogsAsync = ref.watch(weeklySleepLogsProvider(selectedDate));
 
     final dailyLogs = sleepState.value ?? [];
-    
+
     // Calculate total sleep duration for today
     final totalMinutes = dailyLogs.fold<int>(
       0,
@@ -38,7 +38,9 @@ class _SleepLogScreenState extends ConsumerState<SleepLogScreen> {
         centerTitle: true,
         elevation: 0,
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-        titleTextStyle: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+        titleTextStyle: Theme.of(
+          context,
+        ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
       ),
       body: Column(
         children: [
@@ -57,18 +59,28 @@ class _SleepLogScreenState extends ConsumerState<SleepLogScreen> {
                   // Main Sleep Duration Card
                   Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.symmetric(vertical: 48, horizontal: 24),
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 48,
+                      horizontal: 24,
+                    ),
                     decoration: BoxDecoration(
                       color: Theme.of(context).cardColor,
                       borderRadius: BorderRadius.circular(32),
                     ),
                     child: Column(
                       children: [
-                        const Icon(Icons.bedtime, color: Color(0xFF8B5CF6), size: 32),
+                        const Icon(
+                          Icons.bedtime,
+                          color: Color(0xFF8B5CF6),
+                          size: 32,
+                        ),
                         const SizedBox(height: 16),
                         Text(
                           'Total Sleep',
-                          style: TextStyle(color: Colors.grey[600], fontSize: 14),
+                          style: TextStyle(
+                            color: Colors.grey[600],
+                            fontSize: 14,
+                          ),
                         ),
                         const SizedBox(height: 8),
                         Row(
@@ -84,7 +96,9 @@ class _SleepLogScreenState extends ConsumerState<SleepLogScreen> {
                                 return Text(
                                   value.toString(),
                                   style: TextStyle(
-                                    color: Theme.of(context).textTheme.bodyLarge?.color,
+                                    color: Theme.of(
+                                      context,
+                                    ).textTheme.bodyLarge?.color,
                                     fontSize: 64,
                                     fontWeight: FontWeight.bold,
                                   ),
@@ -103,14 +117,19 @@ class _SleepLogScreenState extends ConsumerState<SleepLogScreen> {
                             if (remainingMinutes > 0) ...[
                               const SizedBox(width: 12),
                               TweenAnimationBuilder<int>(
-                                tween: IntTween(begin: 0, end: remainingMinutes),
+                                tween: IntTween(
+                                  begin: 0,
+                                  end: remainingMinutes,
+                                ),
                                 duration: const Duration(seconds: 1),
                                 curve: Curves.easeOutExpo,
                                 builder: (context, value, child) {
                                   return Text(
                                     value.toString(),
                                     style: TextStyle(
-                                      color: Theme.of(context).textTheme.bodyLarge?.color,
+                                      color: Theme.of(
+                                        context,
+                                      ).textTheme.bodyLarge?.color,
                                       fontSize: 48,
                                       fontWeight: FontWeight.bold,
                                     ),
@@ -129,12 +148,15 @@ class _SleepLogScreenState extends ConsumerState<SleepLogScreen> {
                             ],
                           ],
                         ),
-                        
+
                         // Simple Goal Message
                         if (totalHours >= 12) ...[
                           const SizedBox(height: 16),
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 8,
+                            ),
                             decoration: BoxDecoration(
                               color: Colors.green.withValues(alpha: 0.2),
                               borderRadius: BorderRadius.circular(16),
@@ -143,11 +165,18 @@ class _SleepLogScreenState extends ConsumerState<SleepLogScreen> {
                             child: const Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                Icon(Icons.check_circle, color: Colors.green, size: 16),
+                                Icon(
+                                  Icons.check_circle,
+                                  color: Colors.green,
+                                  size: 16,
+                                ),
                                 SizedBox(width: 8),
                                 Text(
                                   'Good Job! (12h+)',
-                                  style: TextStyle(color: Colors.green, fontWeight: FontWeight.bold),
+                                  style: TextStyle(
+                                    color: Colors.green,
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
                               ],
                             ),
@@ -165,115 +194,41 @@ class _SleepLogScreenState extends ConsumerState<SleepLogScreen> {
                       // Calculate sleep debt (recommended 8h/night)
                       const recommendedHoursPerNight = 8.0;
                       final totalDays = 7;
-                      final totalRecommendedMinutes = (recommendedHoursPerNight * 60 * totalDays).toInt();
-                      
+                      final totalRecommendedMinutes =
+                          (recommendedHoursPerNight * 60 * totalDays).toInt();
+
                       final totalActualMinutes = weeklyLogs.fold<int>(
                         0,
                         (sum, log) => sum + log.durationMinutes,
                       );
-                      
-                      final debtMinutes = totalRecommendedMinutes - totalActualMinutes;
+
+                      final debtMinutes =
+                          totalRecommendedMinutes - totalActualMinutes;
                       final debtHours = debtMinutes / 60.0;
-                      
+
                       return SleepDebtCard(debtHours: debtHours);
                     },
                     loading: () => const SizedBox.shrink(),
                     error: (_, __) => const SizedBox.shrink(),
                   ),
-
-                  const SizedBox(height: 24),
-
-                  // Logs List
-                  if (dailyLogs.isNotEmpty) ...[
-                    Container(
-                      padding: const EdgeInsets.all(24),
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).cardColor,
-                        borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            "History",
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: Theme.of(context).textTheme.bodyLarge?.color,
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                          ListView.separated(
-                            shrinkWrap: true,
-                            physics: const NeverScrollableScrollPhysics(),
-                            itemCount: dailyLogs.length,
-                            separatorBuilder: (context, index) => Divider(
-                              height: 1,
-                              color: Theme.of(context).dividerColor,
-                            ),
-                            itemBuilder: (context, index) {
-                              final log = dailyLogs[index];
-                              final hours = log.durationMinutes ~/ 60;
-                              final minutes = log.durationMinutes % 60;
-
-                              return ListTile(
-                                contentPadding: const EdgeInsets.symmetric(vertical: 8),
-                                leading: Container(
-                                  padding: const EdgeInsets.all(10),
-                                  decoration: BoxDecoration(
-                                    color: const Color(0xFF8B5CF6).withValues(alpha: 0.1),
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: const Icon(
-                                    Icons.bedtime,
-                                    color: Color(0xFF8B5CF6),
-                                    size: 20,
-                                  ),
-                                ),
-                                title: Text(
-                                  '${hours}h ${minutes}m',
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    color: Theme.of(context).textTheme.bodyLarge?.color,
-                                    fontSize: 16,
-                                  ),
-                                ),
-                                subtitle: Text(
-                                  '${DateFormat('HH:mm').format(log.startTime)} - ${DateFormat('HH:mm').format(log.endTime)}',
-                                  style: TextStyle(color: Colors.grey[600], fontSize: 12),
-                                ),
-                              );
-                            },
-                          ),
-                        ],
-                      ),
-                    ),
-                  ] else
-                    Padding(
-                      padding: const EdgeInsets.all(32.0),
-                      child: Text(
-                        'No sleep logged yet.\nStart tracking!',
-                        style: TextStyle(color: Colors.grey[600]),
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
                 ],
               ),
             ),
           ),
-
-          // Bottom Button
           Padding(
             padding: const EdgeInsets.all(24.0),
             child: SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: () => _showInputModal(context, notifier, selectedDate),
+                onPressed: () =>
+                    _showInputModal(context, notifier, selectedDate),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF8B5CF6),
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(24),
+                  ),
                 ),
                 child: const Text(
                   'Log Sleep',
@@ -312,11 +267,14 @@ class _SleepLogScreenState extends ConsumerState<SleepLogScreen> {
             end = end.add(const Duration(days: 1));
           }
 
+          final navigator = Navigator.of(context);
+          final messenger = ScaffoldMessenger.of(context);
+
           await notifier.addLog(start, end);
-          
+
           if (mounted) {
-            Navigator.pop(context);
-            ScaffoldMessenger.of(context).showSnackBar(
+            navigator.pop();
+            messenger.showSnackBar(
               const SnackBar(content: Text('Sleep log saved!')),
             );
           }

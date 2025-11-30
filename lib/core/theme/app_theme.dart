@@ -4,36 +4,66 @@ import 'bar_chart_theme.dart';
 export 'bar_chart_theme.dart';
 
 class AppTheme {
-  static const Color _lightPrimary = Color(0xFF1A237E); // Midnight Blue
-  static const Color _lightSecondary = Color(0xFFFF6D00); // Vibrant Orange
-  static const Color _lightBackground = Color(0xFFF5F7FA); // Soft Grey-Blue
+  // --- Colors ---
+  // Light Mode
+  static const Color _lightPrimary = Color(0xFF8D5524); // Brown
+  static const Color _lightSecondary = Color(0xFFFFB088); // Peach
+  static const Color _lightBackground = Color(0xFFFFF0E6); // Cream
   static const Color _lightSurface = Colors.white;
+  static const Color _lightError = Color(0xFFD32F2F);
 
-  static const Color _darkPrimary = Color(0xFF5C6BC0); // Lighter Indigo
-  static const Color _darkSecondary = Color(0xFFFF9E80); // Soft Orange
-  static const Color _darkBackground = Color(0xFF121212); // Deep Black
-  static const Color _darkSurface = Color(0xFF1E1E1E); // Dark Grey
+  // Dark Mode
+  static const Color _darkPrimary = Color(0xFFFFB088); // Peach
+  static const Color _darkSecondary = Color(0xFF8D5524); // Brown
+  static const Color _darkBackground = Color(0xFF2D1E17); // Dark Brown
+  static const Color _darkSurface = Color(0xFF3E2D25); // Slightly lighter brown
+  static const Color _darkError = Color(0xFFEF5350);
 
   // --- Typography ---
   static TextTheme _buildTextTheme(TextTheme base) {
     return base.copyWith(
       displayLarge: base.displayLarge?.copyWith(
+        fontFamily: 'Lexend',
         fontWeight: FontWeight.w800,
         letterSpacing: -1.5,
       ),
       displayMedium: base.displayMedium?.copyWith(
+        fontFamily: 'Lexend',
         fontWeight: FontWeight.w700,
         letterSpacing: -0.5,
       ),
+      displaySmall: base.displaySmall?.copyWith(
+        fontFamily: 'Lexend',
+        fontWeight: FontWeight.w700,
+        letterSpacing: 0,
+      ),
       headlineMedium: base.headlineMedium?.copyWith(
+        fontFamily: 'Lexend',
         fontWeight: FontWeight.w700,
       ),
-      titleLarge: base.titleLarge?.copyWith(fontWeight: FontWeight.w600),
+      headlineSmall: base.headlineSmall?.copyWith(
+        fontFamily: 'Lexend',
+        fontWeight: FontWeight.w600,
+      ),
+      titleLarge: base.titleLarge?.copyWith(
+        fontFamily: 'Lexend',
+        fontWeight: FontWeight.w600,
+      ),
+      titleMedium: base.titleMedium?.copyWith(
+        fontFamily: 'Lexend',
+        fontWeight: FontWeight.w500,
+      ),
       bodyLarge: base.bodyLarge?.copyWith(
+        fontFamily: 'Lexend',
         fontWeight: FontWeight.w400,
         fontSize: 16,
       ),
+      bodyMedium: base.bodyMedium?.copyWith(
+        fontFamily: 'Lexend',
+        fontWeight: FontWeight.w400,
+      ),
       labelLarge: base.labelLarge?.copyWith(
+        fontFamily: 'Lexend',
         fontWeight: FontWeight.w600,
         letterSpacing: 0.5,
       ),
@@ -49,10 +79,11 @@ class AppTheme {
       primary: _lightPrimary,
       secondary: _lightSecondary,
       surface: _lightSurface,
-
+      error: _lightError,
       onPrimary: Colors.white,
-      onSecondary: Colors.white,
+      onSecondary: Colors.black,
       onSurface: Colors.black87,
+      onError: Colors.white,
     ),
 
     // Typography
@@ -67,24 +98,27 @@ class AppTheme {
     // AppBar
     appBarTheme: const AppBarTheme(
       elevation: 0,
-      backgroundColor: _lightBackground, // Blend with background
-      foregroundColor: _lightPrimary,
+      backgroundColor: _lightBackground,
+      foregroundColor: Colors.black87,
       centerTitle: true,
-      iconTheme: IconThemeData(color: _lightPrimary),
+      iconTheme: IconThemeData(color: Colors.black87),
+      titleTextStyle: TextStyle(
+        fontFamily: 'Lexend',
+        color: Colors.black87,
+        fontSize: 20,
+        fontWeight: FontWeight.bold,
+      ),
     ),
 
     // Cards
     cardTheme: CardThemeData(
-      elevation: 4,
-      shadowColor: Colors.black.withValues(alpha: 0.1),
+      elevation: 0,
       color: _lightSurface,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20), // Softer corners
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
       margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
     ),
 
-    // Inputs
+    // Inputs (Default fallback, though we use CustomTextField)
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
       fillColor: Colors.white,
@@ -101,51 +135,13 @@ class AppTheme {
         borderRadius: BorderRadius.circular(16),
         borderSide: const BorderSide(color: _lightPrimary, width: 2),
       ),
-      errorBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(16),
-        borderSide: const BorderSide(color: Colors.redAccent, width: 1),
-      ),
-      labelStyle: const TextStyle(color: Colors.grey),
-      floatingLabelStyle: const TextStyle(color: _lightPrimary),
-    ),
-
-    // Buttons
-    elevatedButtonTheme: ElevatedButtonThemeData(
-      style: ElevatedButton.styleFrom(
-        backgroundColor: _lightPrimary,
-        foregroundColor: Colors.white,
-        elevation: 4,
-        shadowColor: _lightPrimary.withValues(alpha: 0.4),
-        padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        textStyle: const TextStyle(
-          fontSize: 16,
-          fontWeight: FontWeight.bold,
-          letterSpacing: 0.5,
-        ),
-      ),
-    ),
-    outlinedButtonTheme: OutlinedButtonThemeData(
-      style: OutlinedButton.styleFrom(
-        foregroundColor: _lightPrimary,
-        side: const BorderSide(color: _lightPrimary, width: 2),
-        padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-      ),
-    ),
-    textButtonTheme: TextButtonThemeData(
-      style: TextButton.styleFrom(
-        foregroundColor: _lightPrimary,
-        textStyle: const TextStyle(fontWeight: FontWeight.w600),
-      ),
     ),
 
     // Floating Action Button
     floatingActionButtonTheme: const FloatingActionButtonThemeData(
-      backgroundColor: _lightSecondary,
+      backgroundColor: _lightPrimary,
       foregroundColor: Colors.white,
-      elevation: 6,
+      elevation: 4,
     ),
 
     // Extensions
@@ -153,14 +149,15 @@ class AppTheme {
       BarChartTheme(
         barColor: _lightPrimary,
         barBackgroundColor: _lightPrimary.withValues(alpha: 0.1),
-        gridColor: Colors.white,
+        gridColor: Colors.black12,
         toolTipColor: _lightSecondary,
         labelStyle: const TextStyle(
+          fontFamily: 'Lexend',
           color: _lightPrimary,
           fontSize: 12,
           fontWeight: FontWeight.bold,
         ),
-        greenBars: const Color.fromARGB(255, 16, 126, 99),
+        greenBars: const Color(0xFF4CAF50),
       ),
     ],
   );
@@ -174,10 +171,11 @@ class AppTheme {
       primary: _darkPrimary,
       secondary: _darkSecondary,
       surface: _darkSurface,
-
-      onPrimary: Colors.white,
-      onSecondary: Colors.black,
+      error: _darkError,
+      onPrimary: Colors.black,
+      onSecondary: Colors.white,
       onSurface: Colors.white,
+      onError: Colors.white,
     ),
 
     // Typography
@@ -196,14 +194,19 @@ class AppTheme {
       foregroundColor: Colors.white,
       centerTitle: true,
       iconTheme: IconThemeData(color: Colors.white),
+      titleTextStyle: TextStyle(
+        fontFamily: 'Lexend',
+        color: Colors.white,
+        fontSize: 20,
+        fontWeight: FontWeight.bold,
+      ),
     ),
 
     // Cards
     cardTheme: CardThemeData(
-      elevation: 4,
-      shadowColor: Colors.black.withValues(alpha: 0.3),
+      elevation: 0,
       color: _darkSurface,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
       margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
     ),
 
@@ -224,60 +227,28 @@ class AppTheme {
         borderRadius: BorderRadius.circular(16),
         borderSide: const BorderSide(color: _darkPrimary, width: 2),
       ),
-      labelStyle: const TextStyle(color: Colors.grey),
-      floatingLabelStyle: const TextStyle(color: _darkPrimary),
     ),
 
-    // Buttons
-    elevatedButtonTheme: ElevatedButtonThemeData(
-      style: ElevatedButton.styleFrom(
-        backgroundColor: _darkPrimary,
-        foregroundColor: Colors.white,
-        elevation: 4,
-        shadowColor: _darkPrimary.withValues(alpha: 0.4),
-        padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        textStyle: const TextStyle(
-          fontSize: 16,
-          fontWeight: FontWeight.bold,
-          letterSpacing: 0.5,
-        ),
-      ),
-    ),
-    outlinedButtonTheme: OutlinedButtonThemeData(
-      style: OutlinedButton.styleFrom(
-        foregroundColor: Colors.white,
-        side: const BorderSide(color: Colors.white70, width: 2),
-        padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-      ),
-    ),
-    textButtonTheme: TextButtonThemeData(
-      style: TextButton.styleFrom(
-        foregroundColor: _darkSecondary,
-        textStyle: const TextStyle(fontWeight: FontWeight.w600),
-      ),
-    ),
-
+    // Floating Action Button
     floatingActionButtonTheme: const FloatingActionButtonThemeData(
-      backgroundColor: _darkSecondary,
+      backgroundColor: _darkPrimary,
       foregroundColor: Colors.black,
-      elevation: 6,
+      elevation: 4,
     ),
 
     extensions: <ThemeExtension<dynamic>>[
       BarChartTheme(
         barColor: _darkPrimary,
         barBackgroundColor: _darkPrimary.withValues(alpha: 0.1),
-        gridColor: _darkSurface,
+        gridColor: Colors.white12,
         toolTipColor: _darkSecondary,
         labelStyle: const TextStyle(
+          fontFamily: 'Lexend',
           color: _darkPrimary,
           fontSize: 12,
           fontWeight: FontWeight.bold,
         ),
-        greenBars: const Color.fromARGB(255, 46, 157, 130),
+        greenBars: const Color(0xFF66BB6A),
       ),
     ],
   );

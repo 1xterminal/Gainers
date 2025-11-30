@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../data/sleep_model.dart';
+import '../data/sleep_goal_model.dart';
 import '../data/sleep_repository.dart';
 
 final sleepRepositoryProvider = Provider((ref) {
@@ -34,10 +35,7 @@ class SleepNotifier extends AsyncNotifier<List<SleepLog>> {
     if (user == null) return;
 
     final duration = endTime.difference(startTime).inMinutes;
-    // Handle case where sleep crosses midnight (end time is before start time)
-    // Actually, the UI should handle passing correct DateTime objects.
-    // If endTime < startTime, it usually means next day.
-    
+
     final log = SleepLog(
       id: '', // Supabase will generate
       userId: user.id,
@@ -51,25 +49,48 @@ class SleepNotifier extends AsyncNotifier<List<SleepLog>> {
     state = await AsyncValue.guard(() async {
       await _repo.addSleepLog(log);
       // Invalidate weekly provider to refresh chart
-      ref.invalidate(weeklySleepLogsProvider); 
+      ref.invalidate(weeklySleepLogsProvider);
       return _loadLogs();
     });
   }
 }
 
-final weeklySleepLogsProvider = FutureProvider.family<List<SleepLog>, DateTime>((ref, date) async {
-  final repo = ref.watch(sleepRepositoryProvider);
-  // Get start and end of the week (e.g., Mon-Sun or just last 7 days)
-  // Let's do last 7 days ending on 'date' for consistency chart
-  // Or better: The week containing 'date'.
-  // Let's stick to: 7 days ending on 'date' to show recent trend up to that day.
-  final end = DateTime(date.year, date.month, date.day, 23, 59, 59);
-  final start = end.subtract(const Duration(days: 6));
-  
-  return repo.getSleepLogsForRange(start, end);
+final weeklySleepLogsProvider = FutureProvider.family<List<SleepLog>, DateTime>(
+  (ref, date) async {
+    final repo = ref.watch(sleepRepositoryProvider);
+    // Get start and end of the week (e.g., Mon-Sun or just last 7 days)
+    // Let's do last 7 days ending on 'date' for consistency chart
+    final end = DateTime(date.year, date.month, date.day, 23, 59, 59);
+    final start = end.subtract(const Duration(days: 6));
+
+    return repo.getSleepLogsForRange(start, end);
+  },
+);
+
+final sleepProvider = AsyncNotifierProvider<SleepNotifier, List<SleepLog>>(() {
+  return SleepNotifier();
 });
 
-final sleepProvider =
-    AsyncNotifierProvider<SleepNotifier, List<SleepLog>>(() {
-      return SleepNotifier();
+// --- Sleep Goal Provider ---
+class SleepGoalNotifier extends AsyncNotifier<SleepGoal?> {
+  @override
+  Future<SleepGoal?> build() async {
+    final repo = ref.watch(sleepRepositoryProvider);
+    return repo.getSleepGoal();
+  }
+
+  Future<void> setGoal(int minutes) async {
+    final repo = ref.read(sleepRepositoryProvider);
+    state = const AsyncValue.loading();
+    state = await AsyncValue.guard(() async {
+      await repo.setSleepGoal(minutes);
+      return repo.getSleepGoal();
     });
+  }
+}
+
+final sleepGoalProvider = AsyncNotifierProvider<SleepGoalNotifier, SleepGoal?>(
+  () {
+    return SleepGoalNotifier();
+  },
+);

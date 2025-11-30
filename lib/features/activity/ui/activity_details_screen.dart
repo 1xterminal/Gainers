@@ -21,9 +21,7 @@ class _ActivityDetailsScreenState extends ConsumerState<ActivityDetailsScreen> {
   Widget build(BuildContext context) {
     //watch health provider to get the data
     final asyncHealthState = ref.watch(healthProvider);
-
-    //get the notifier to update the data
-    final notifier = ref.read(healthProvider.notifier);
+    final selectedDate = ref.watch(activityDateProvider);
 
     //get the bar chart theme from app_theme.dart
     final barTheme = Theme.of(context).extension<BarChartTheme>()!;
@@ -51,9 +49,9 @@ class _ActivityDetailsScreenState extends ConsumerState<ActivityDetailsScreen> {
           children: [
             // -- date wheel --
             HorizontalDateWheel(
-              selectedDate: notifier.selectedDate,
+              selectedDate: selectedDate,
               onDateSelected: (date) {
-                notifier.setDate(date);
+                ref.read(activityDateProvider.notifier).setDate(date);
               },
             ),
 
@@ -116,7 +114,7 @@ class _ActivityDetailsScreenState extends ConsumerState<ActivityDetailsScreen> {
                 final caloriesShown = stepsShown * 0.04;
                 final titleString = DateFormat(
                   'MMMM d, yyyy',
-                ).format(notifier.selectedDate);
+                ).format(selectedDate);
 
                 final double totalDistanceLifetime =
                     healthStats.lifetimeSteps * 0.0003048;

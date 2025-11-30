@@ -16,7 +16,7 @@ class ActivityCards {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: theme.gridColor,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
@@ -154,12 +154,10 @@ class ActivityCards {
     required double distance,
     required Color textColor,
   }) {
-    final theme = Theme.of(context).extension<BarChartTheme>()!;
-
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: theme.gridColor,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
@@ -233,12 +231,10 @@ class ActivityCards {
     required Color textColor,
     DateTime? date,
   }) {
-    final theme = Theme.of(context).extension<BarChartTheme>()!;
-
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: theme.gridColor,
+        color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
