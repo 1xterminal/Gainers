@@ -6,6 +6,7 @@ import 'meal_detail_screen.dart';
 import 'nutrition_detail_screen.dart';
 import '../../../core/widgets/horizontal_date_wheel.dart';
 import 'widgets/macro_pie_chart.dart';
+import '../../../core/widgets/animated_counter.dart';
 
 class NutritionScreen extends ConsumerWidget {
   const NutritionScreen({super.key});
@@ -81,17 +82,17 @@ class NutritionScreen extends ConsumerWidget {
                           _buildLegendItem(
                             'Protein',
                             Colors.redAccent,
-                            '$totalProtein g',
+                            totalProtein,
                           ),
                           _buildLegendItem(
                             'Carbs',
                             Colors.blueAccent,
-                            '$totalCarbs g',
+                            totalCarbs,
                           ),
                           _buildLegendItem(
                             'Fat',
                             Colors.orangeAccent,
-                            '$totalFat g',
+                            totalFat,
                           ),
                         ],
                       ),
@@ -123,7 +124,7 @@ class NutritionScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildLegendItem(String label, Color color, String value) {
+  Widget _buildLegendItem(String label, Color color, int value) {
     return Column(
       children: [
         Row(
@@ -141,7 +142,11 @@ class NutritionScreen extends ConsumerWidget {
           ],
         ),
         const SizedBox(height: 4),
-        Text(value, style: const TextStyle(fontWeight: FontWeight.bold)),
+        AnimatedCounter(
+          value: value,
+          suffix: ' g',
+          style: const TextStyle(fontWeight: FontWeight.bold),
+        ),
       ],
     );
   }
@@ -214,8 +219,8 @@ class NutritionScreen extends ConsumerWidget {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  Text(
-                    '$totalCalories',
+                  AnimatedCounter(
+                    value: totalCalories,
                     style: const TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
