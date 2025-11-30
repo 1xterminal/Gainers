@@ -20,20 +20,15 @@ class HydrationDateNotifier extends Notifier<DateTime> {
 }
 
 class HydrationNotifier extends AsyncNotifier<List<HydrationLog>> {
-  late final HydrationRepository _repo;
-
   @override
   Future<List<HydrationLog>> build() async {
-    _repo = ref.read(hydrationRepositoryProvider);
+    final repo = ref.read(hydrationRepositoryProvider);
     final date = ref.watch(hydrationDateProvider);
-    return _loadLogs(date);
-  }
-
-  Future<List<HydrationLog>> _loadLogs(DateTime date) async {
-    return _repo.getLogs(date);
+    return repo.getLogs(date);
   }
 
   Future<void> addLog(int amount) async {
+    final repo = ref.read(hydrationRepositoryProvider);
     final userId = Supabase.instance.client.auth.currentUser?.id ?? '';
     final log = HydrationLog(
       id: const Uuid().v4(),
@@ -50,11 +45,11 @@ class HydrationNotifier extends AsyncNotifier<List<HydrationLog>> {
     }
 
     try {
-      await _repo.addLog(log);
+      await repo.addLog(log);
       // Similar to deleteLog, we can choose to reload or trust our local state.
       // For consistency and safety, let's reload silently.
       final date = ref.read(hydrationDateProvider);
-      final freshLogs = await _repo.getLogs(date);
+      final freshLogs = await repo.getLogs(date);
       state = AsyncValue.data(freshLogs);
     } catch (e, st) {
       // Revert on error
@@ -64,6 +59,7 @@ class HydrationNotifier extends AsyncNotifier<List<HydrationLog>> {
   }
 
   Future<void> updateLog(HydrationLog log) async {
+    final repo = ref.read(hydrationRepositoryProvider);
     final previousState = state;
     // Optimistic update
     if (state.hasValue) {
@@ -77,10 +73,10 @@ class HydrationNotifier extends AsyncNotifier<List<HydrationLog>> {
     }
 
     try {
-      await _repo.updateLog(log);
+      await repo.updateLog(log);
       // Reload silently to ensure consistency
       final date = ref.read(hydrationDateProvider);
-      final freshLogs = await _repo.getLogs(date);
+      final freshLogs = await repo.getLogs(date);
       state = AsyncValue.data(freshLogs);
     } catch (e, st) {
       // Revert on error
@@ -90,6 +86,7 @@ class HydrationNotifier extends AsyncNotifier<List<HydrationLog>> {
   }
 
   Future<void> deleteLog(String id) async {
+    final repo = ref.read(hydrationRepositoryProvider);
     final previousState = state;
     // Optimistic update: remove the log immediately from the UI
     if (state.hasValue) {
@@ -100,7 +97,7 @@ class HydrationNotifier extends AsyncNotifier<List<HydrationLog>> {
     }
 
     try {
-      await _repo.deleteLog(id);
+      await repo.deleteLog(id);
       // No need to reload logs if successful, as our local state is already correct
       // But to be safe and consistent with other methods, we can reload or just leave it.
       // Reloading ensures we are in sync with DB triggers etc if any.
@@ -108,7 +105,7 @@ class HydrationNotifier extends AsyncNotifier<List<HydrationLog>> {
       // OR reload silently without setting state to loading.
       // _loadLogs() returns a Future<List>, we can update state with it.
       final date = ref.read(hydrationDateProvider);
-      final freshLogs = await _repo.getLogs(date);
+      final freshLogs = await repo.getLogs(date);
       state = AsyncValue.data(freshLogs);
     } catch (e, st) {
       // Revert on error
@@ -129,16 +126,15 @@ final dailyTargetProvider = AsyncNotifierProvider<DailyTargetNotifier, int>(() {
 });
 
 class DailyTargetNotifier extends AsyncNotifier<int> {
-  late final HydrationRepository _repo;
-
   @override
   Future<int> build() async {
-    _repo = ref.read(hydrationRepositoryProvider);
-    return _repo.getDailyTarget();
+    final repo = ref.read(hydrationRepositoryProvider);
+    return repo.getDailyTarget();
   }
 
   Future<void> setTarget(int target) async {
-    await _repo.setDailyTarget(target);
+    final repo = ref.read(hydrationRepositoryProvider);
+    await repo.setDailyTarget(target);
     state = AsyncValue.data(target);
   }
 }
