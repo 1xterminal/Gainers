@@ -1,6 +1,5 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'weight_model.dart';
-import '../../profile/domain/entities/profile.dart';
 
 class WeightRepository {
   final SupabaseClient _client;
@@ -18,8 +17,7 @@ class WeightRepository {
 
     return _dummyLogs.where((log) {
       return log.date.isAfter(startOfDay) && log.date.isBefore(endOfDay);
-    }).toList()
-      ..sort((a, b) => b.date.compareTo(a.date));
+    }).toList()..sort((a, b) => b.date.compareTo(a.date));
   }
 
   Future<void> addWeightLog(WeightLog log) async {
@@ -46,7 +44,7 @@ class WeightRepository {
       });
     } catch (e) {
       // Ignore if profile update fails
-      print('Could not update profile: $e');
+      // Ignore if profile update fails
     }
   }
 

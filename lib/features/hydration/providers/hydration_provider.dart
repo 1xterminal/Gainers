@@ -1,36 +1,45 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../data/hydration_model.dart';
 import '../data/hydration_repository.dart';
 
-final hydrationRepositoryProvider = Provider((ref) => HydrationRepository());
+final hydrationRepositoryProvider = Provider(
+  (ref) => HydrationRepository(Supabase.instance.client),
+);
+
+final hydrationDateProvider = NotifierProvider<HydrationDateNotifier, DateTime>(
+  HydrationDateNotifier.new,
+);
+
+class HydrationDateNotifier extends Notifier<DateTime> {
+  @override
+  DateTime build() => DateTime.now();
+
+  void setDate(DateTime date) => state = date;
+}
 
 class HydrationNotifier extends AsyncNotifier<List<HydrationLog>> {
   late final HydrationRepository _repo;
-  DateTime _selectedDate = DateTime.now();
-  DateTime get selectedDate => _selectedDate;
 
   @override
   Future<List<HydrationLog>> build() async {
     _repo = ref.read(hydrationRepositoryProvider);
-    return _loadLogs();
+    final date = ref.watch(hydrationDateProvider);
+    return _loadLogs(date);
   }
 
-  Future<List<HydrationLog>> _loadLogs() async {
-    return _repo.getLogs(_selectedDate);
-  }
-
-  Future<void> setDate(DateTime date) async {
-    _selectedDate = date;
-    state = const AsyncValue.loading();
-    state = await AsyncValue.guard(() => _loadLogs());
+  Future<List<HydrationLog>> _loadLogs(DateTime date) async {
+    return _repo.getLogs(date);
   }
 
   Future<void> addLog(int amount) async {
+    final userId = Supabase.instance.client.auth.currentUser?.id ?? '';
     final log = HydrationLog(
       id: const Uuid().v4(),
-      amount: amount,
-      timestamp: DateTime.now(),
+      userId: userId,
+      amountMl: amount,
+      createdAt: DateTime.now(),
     );
 
     final previousState = state;
@@ -44,7 +53,8 @@ class HydrationNotifier extends AsyncNotifier<List<HydrationLog>> {
       await _repo.addLog(log);
       // Similar to deleteLog, we can choose to reload or trust our local state.
       // For consistency and safety, let's reload silently.
-      final freshLogs = await _repo.getLogs(_selectedDate);
+      final date = ref.read(hydrationDateProvider);
+      final freshLogs = await _repo.getLogs(date);
       state = AsyncValue.data(freshLogs);
     } catch (e, st) {
       // Revert on error
@@ -69,7 +79,8 @@ class HydrationNotifier extends AsyncNotifier<List<HydrationLog>> {
     try {
       await _repo.updateLog(log);
       // Reload silently to ensure consistency
-      final freshLogs = await _repo.getLogs(_selectedDate);
+      final date = ref.read(hydrationDateProvider);
+      final freshLogs = await _repo.getLogs(date);
       state = AsyncValue.data(freshLogs);
     } catch (e, st) {
       // Revert on error
@@ -96,7 +107,8 @@ class HydrationNotifier extends AsyncNotifier<List<HydrationLog>> {
       // For "smoothness", let's NOT reload immediately if we trust the local operation,
       // OR reload silently without setting state to loading.
       // _loadLogs() returns a Future<List>, we can update state with it.
-      final freshLogs = await _repo.getLogs(_selectedDate);
+      final date = ref.read(hydrationDateProvider);
+      final freshLogs = await _repo.getLogs(date);
       state = AsyncValue.data(freshLogs);
     } catch (e, st) {
       // Revert on error

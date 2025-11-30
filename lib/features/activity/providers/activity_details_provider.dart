@@ -4,18 +4,29 @@ import 'package:health/health.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:gainers/features/activity/data/models/step_data.dart';
 
+final activityDateProvider = NotifierProvider<ActivityDateNotifier, DateTime>(
+  ActivityDateNotifier.new,
+);
+
+class ActivityDateNotifier extends Notifier<DateTime> {
+  @override
+  DateTime build() => DateTime.now();
+
+  void setDate(DateTime date) => state = date;
+}
+
 //notifier to handle fetch health data
 class HealthNotifier extends AsyncNotifier<StepData> {
   final Health _health = Health();
-  DateTime _selectedDate = DateTime.now();
 
   @override
   Future<StepData> build() async {
-    return _fetchHealthData();
+    final date = ref.watch(activityDateProvider);
+    return _fetchHealthData(date);
   }
 
   //method to fetch health data
-  Future<StepData> _fetchHealthData() async {
+  Future<StepData> _fetchHealthData(DateTime date) async {
     //1. ask for permission
     var activityStatus = await Permission.activityRecognition.request();
 
@@ -42,7 +53,6 @@ class HealthNotifier extends AsyncNotifier<StepData> {
     }
 
     //4. define time intervals
-    DateTime date = _selectedDate;
     DateTime startTime = DateTime(date.year, date.month, date.day, 0, 0, 0);
     DateTime endTime = DateTime(date.year, date.month, date.day, 23, 59, 59);
     DateTime lifetimeStart = DateTime(2000, 1, 1);
@@ -114,20 +124,6 @@ class HealthNotifier extends AsyncNotifier<StepData> {
       highestStepsDate: highestStepsDate,
     );
   }
-
-  //function to reload data
-  Future<void> refresh() async {
-    state = const AsyncValue.loading();
-    state = await AsyncValue.guard(() => _fetchHealthData());
-  }
-
-  Future<void> setDate(DateTime date) async {
-    _selectedDate = date;
-    state = const AsyncValue.loading();
-    state = await AsyncValue.guard(() => _fetchHealthData());
-  }
-
-  DateTime get selectedDate => _selectedDate;
 }
 
 final healthProvider = AsyncNotifierProvider<HealthNotifier, StepData>(() {

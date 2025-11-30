@@ -67,7 +67,7 @@ class HydrationHistoryList extends StatelessWidget {
               separatorBuilder: (context, index) => const Divider(height: 1),
               itemBuilder: (context, index) {
                 final sortedLogs = List.from(logs)
-                  ..sort((a, b) => b.timestamp.compareTo(a.timestamp));
+                  ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
                 final log = sortedLogs[index];
 
                 return Dismissible(
@@ -108,11 +108,11 @@ class HydrationHistoryList extends StatelessWidget {
                       ),
                     ),
                     title: Text(
-                      '${log.amount} ml',
+                      '${log.amountMl} ml',
                       style: const TextStyle(fontWeight: FontWeight.bold),
                     ),
                     subtitle: Text(
-                      DateFormat('h:mm a').format(log.timestamp),
+                      DateFormat('h:mm a').format(log.createdAt),
                       style: TextStyle(color: Colors.grey[600]),
                     ),
                   ),

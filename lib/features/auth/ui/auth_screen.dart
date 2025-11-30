@@ -6,6 +6,7 @@ import 'package:gainers/features/auth/providers/auth_provider.dart';
 import 'package:gainers/features/profile/ui/profile_setup_screen.dart';
 import 'package:gainers/features/auth/ui/email_confirmation_screen.dart';
 import 'package:gainers/layout/main_layout.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
 class AuthScreen extends ConsumerStatefulWidget {
   const AuthScreen({super.key});
@@ -234,18 +235,23 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   // --- Header ---
-                  Text(
-                    'GAINERS',
-                    style: theme.textTheme.titleLarge?.copyWith(
-                      color: Colors.grey,
-                      letterSpacing: 1.5,
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: SvgPicture.asset(
+                      'images/Logo-Gainers.svg',
+                      height: 40,
+                      colorFilter: ColorFilter.mode(
+                        Colors.grey,
+                        BlendMode.srcIn,
+                      ),
                     ),
                   ),
                   const SizedBox(height: 24),
                   Text(
                     _isLogin ? 'Welcome\nBack' : 'Create an\nAccount',
-                    style: theme.textTheme.displayLarge?.copyWith(
+                    style: theme.textTheme.displaySmall?.copyWith(
                       color: isDark ? Colors.white : Colors.black87,
+                      fontWeight: FontWeight.bold,
                       height: 1.1,
                     ),
                   ),

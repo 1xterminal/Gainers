@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gainers/features/auth/providers/auth_provider.dart';
 import 'package:gainers/features/profile/providers/profile_provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:gainers/core/services/notification_service.dart';
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
@@ -21,14 +23,30 @@ class ProfileScreen extends ConsumerWidget {
             pinned: true,
             backgroundColor: theme.scaffoldBackgroundColor,
             elevation: 0,
-            title: Text(
-              'Account',
-              style: theme.textTheme.headlineMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: theme.primaryColor,
+            title: Padding(
+              padding: const EdgeInsets.only(left: 8.0),
+              child: SvgPicture.asset(
+                'images/Logo-Gainers.svg',
+                height: 24,
+                colorFilter: ColorFilter.mode(
+                  theme.primaryColor,
+                  BlendMode.srcIn,
+                ),
               ),
             ),
             centerTitle: false,
+          ),
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(24, 16, 24, 0),
+              child: Text(
+                'Account',
+                style: theme.textTheme.displaySmall?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                ),
+              ),
+            ),
           ),
           SliverPadding(
             padding: const EdgeInsets.all(24.0),
@@ -96,6 +114,14 @@ class ProfileScreen extends ConsumerWidget {
                   icon: Icons.history,
                   title: 'History',
                   onTap: () {},
+                ),
+                _buildSettingsTile(
+                  context,
+                  icon: Icons.notifications_active,
+                  title: 'Test Notification',
+                  onTap: () async {
+                    await NotificationService().showInstantNotification();
+                  },
                 ),
                 const SizedBox(height: 24),
                 _buildSettingsTile(

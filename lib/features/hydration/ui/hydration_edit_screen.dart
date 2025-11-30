@@ -24,8 +24,8 @@ class _HydrationEditScreenState extends ConsumerState<HydrationEditScreen> {
   @override
   void initState() {
     super.initState();
-    _selectedAmount = widget.log.amount;
-    _selectedTime = widget.log.timestamp;
+    _selectedAmount = widget.log.amountMl;
+    _selectedTime = widget.log.createdAt;
   }
 
   Future<void> _pickTime() async {
@@ -199,8 +199,9 @@ class _HydrationEditScreenState extends ConsumerState<HydrationEditScreen> {
     if (_selectedAmount > 0) {
       final updatedLog = HydrationLog(
         id: widget.log.id,
-        amount: _selectedAmount,
-        timestamp: _selectedTime,
+        userId: widget.log.userId,
+        amountMl: _selectedAmount,
+        createdAt: _selectedTime,
       );
 
       ref.read(hydrationProvider.notifier).updateLog(updatedLog);

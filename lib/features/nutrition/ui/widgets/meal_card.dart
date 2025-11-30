@@ -28,7 +28,7 @@ class MealCard extends ConsumerWidget {
             MaterialPageRoute(
               builder: (context) => MealDetailScreen(
                 mealType: mealType,
-                date: ref.read(nutritionProvider.notifier).selectedDate,
+                date: ref.read(nutritionDateProvider),
               ),
             ),
           );

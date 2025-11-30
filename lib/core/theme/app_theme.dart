@@ -32,6 +32,11 @@ class AppTheme {
         fontWeight: FontWeight.w700,
         letterSpacing: -0.5,
       ),
+      displaySmall: base.displaySmall?.copyWith(
+        fontFamily: 'Lexend',
+        fontWeight: FontWeight.w700,
+        letterSpacing: 0,
+      ),
       headlineMedium: base.headlineMedium?.copyWith(
         fontFamily: 'Lexend',
         fontWeight: FontWeight.w700,

@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gainers/features/dashboard/ui/dashboard_screen.dart';
 import 'package:gainers/features/profile/domain/entities/profile.dart';
 import 'package:gainers/features/profile/providers/profile_provider.dart';
+import 'package:gainers/core/widgets/custom_text_field.dart';
+import 'package:gainers/core/widgets/custom_button.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class ProfileSetupScreen extends ConsumerStatefulWidget {
@@ -120,13 +122,7 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
 
     return Scaffold(
       body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [theme.scaffoldBackgroundColor, Colors.white],
-          ),
-        ),
+        decoration: BoxDecoration(color: theme.scaffoldBackgroundColor),
         child: SafeArea(
           child: Column(
             children: [
@@ -140,7 +136,10 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
                   children: [
                     if (_pageIndex > 0)
                       IconButton(
-                        icon: const Icon(Icons.arrow_back_ios),
+                        icon: Icon(
+                          Icons.arrow_back_ios,
+                          color: theme.primaryColor,
+                        ),
                         onPressed: () {
                           _pageController.previousPage(
                             duration: const Duration(milliseconds: 300),
@@ -156,7 +155,9 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
                         child: LinearProgressIndicator(
                           value: progress,
                           minHeight: 8,
-                          backgroundColor: Colors.grey[200],
+                          backgroundColor: theme.primaryColor.withValues(
+                            alpha: 0.2,
+                          ),
                           valueColor: AlwaysStoppedAnimation<Color>(
                             theme.primaryColor,
                           ),
@@ -168,6 +169,7 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
                       '${_pageIndex + 1}/6',
                       style: theme.textTheme.labelLarge?.copyWith(
                         color: Colors.grey[600],
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
                   ],
@@ -188,12 +190,10 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
                       title: "What's your name?",
                       subtitle: "Let us know what to call you.",
                       formKey: _formKeys[0],
-                      child: TextFormField(
+                      child: CustomTextField(
                         controller: _displayNameController,
-                        decoration: const InputDecoration(
-                          labelText: 'Display Name',
-                          prefixIcon: Icon(Icons.person_outline),
-                        ),
+                        label: 'Display Name',
+                        prefixIcon: Icons.person_outline,
                         validator: (value) => value!.isEmpty
                             ? 'Please enter your display name'
                             : null,
@@ -203,12 +203,10 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
                       title: 'What is your gender?',
                       subtitle: "This helps us calculate your metabolic rate.",
                       formKey: _formKeys[1],
-                      child: TextFormField(
+                      child: CustomTextField(
                         controller: _genderController,
-                        decoration: const InputDecoration(
-                          labelText: 'Gender',
-                          prefixIcon: Icon(Icons.wc),
-                        ),
+                        label: 'Gender',
+                        prefixIcon: Icons.wc,
                         validator: (value) =>
                             value!.isEmpty ? 'Please enter your gender' : null,
                       ),
@@ -217,29 +215,28 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
                       title: 'When were you born?',
                       subtitle: "We use this to calculate your age.",
                       formKey: _formKeys[2],
-                      child: TextFormField(
-                        controller: _dobController,
-                        decoration: const InputDecoration(
-                          labelText: 'Date of Birth',
-                          prefixIcon: Icon(Icons.calendar_today),
-                        ),
-                        readOnly: true,
+                      child: GestureDetector(
                         onTap: _selectDate,
-                        validator: (value) => value!.isEmpty
-                            ? 'Please enter your date of birth'
-                            : null,
+                        child: AbsorbPointer(
+                          child: CustomTextField(
+                            controller: _dobController,
+                            label: 'Date of Birth',
+                            prefixIcon: Icons.calendar_today,
+                            validator: (value) => value!.isEmpty
+                                ? 'Please enter your date of birth'
+                                : null,
+                          ),
+                        ),
                       ),
                     ),
                     _ProfilePage(
                       title: 'How tall are you?',
                       subtitle: "Height is a key factor in your BMR.",
                       formKey: _formKeys[3],
-                      child: TextFormField(
+                      child: CustomTextField(
                         controller: _heightController,
-                        decoration: const InputDecoration(
-                          labelText: 'Height (cm)',
-                          prefixIcon: Icon(Icons.height),
-                        ),
+                        label: 'Height (cm)',
+                        prefixIcon: Icons.height,
                         keyboardType: TextInputType.number,
                         validator: (value) =>
                             value!.isEmpty ? 'Please enter your height' : null,
@@ -249,12 +246,10 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
                       title: 'Current weight?',
                       subtitle: "We'll track your progress from here.",
                       formKey: _formKeys[4],
-                      child: TextFormField(
+                      child: CustomTextField(
                         controller: _weightController,
-                        decoration: const InputDecoration(
-                          labelText: 'Weight (kg)',
-                          prefixIcon: Icon(Icons.monitor_weight_outlined),
-                        ),
+                        label: 'Weight (kg)',
+                        prefixIcon: Icons.monitor_weight_outlined,
                         keyboardType: TextInputType.number,
                         validator: (value) =>
                             value!.isEmpty ? 'Please enter your weight' : null,
@@ -279,9 +274,29 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
                             _selectedActivityGoal = value;
                           });
                         },
-                        decoration: const InputDecoration(
+                        decoration: InputDecoration(
                           labelText: 'Select Goal',
-                          prefixIcon: Icon(Icons.flag_outlined),
+                          prefixIcon: Icon(
+                            Icons.flag_outlined,
+                            color: theme.primaryColor,
+                          ),
+                          filled: true,
+                          fillColor: theme.cardColor,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(16),
+                            borderSide: BorderSide.none,
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(16),
+                            borderSide: BorderSide.none,
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(16),
+                            borderSide: BorderSide(
+                              color: theme.primaryColor,
+                              width: 2,
+                            ),
+                          ),
                         ),
                         validator: (value) =>
                             value == null ? 'Please select a goal' : null,
@@ -294,32 +309,20 @@ class _ProfileSetupScreenState extends ConsumerState<ProfileSetupScreen> {
               // --- Bottom Action Button ---
               Padding(
                 padding: const EdgeInsets.all(24.0),
-                child: SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: () {
-                      if (_pageIndex < 5) {
-                        if (_formKeys[_pageIndex].currentState!.validate()) {
-                          _pageController.nextPage(
-                            duration: const Duration(milliseconds: 300),
-                            curve: Curves.ease,
-                          );
-                        }
-                      } else {
-                        _handleSubmit();
+                child: PrimaryButton(
+                  label: _pageIndex == 5 ? 'COMPLETE SETUP' : 'CONTINUE',
+                  onPressed: () {
+                    if (_pageIndex < 5) {
+                      if (_formKeys[_pageIndex].currentState!.validate()) {
+                        _pageController.nextPage(
+                          duration: const Duration(milliseconds: 300),
+                          curve: Curves.ease,
+                        );
                       }
-                    },
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 18),
-                    ),
-                    child: Text(
-                      _pageIndex == 5 ? 'COMPLETE SETUP' : 'CONTINUE',
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
+                    } else {
+                      _handleSubmit();
+                    }
+                  },
                 ),
               ),
             ],

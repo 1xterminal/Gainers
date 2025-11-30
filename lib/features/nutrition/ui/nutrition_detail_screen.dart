@@ -9,7 +9,7 @@ class NutritionDetailScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final foodState = ref.watch(nutritionProvider);
-    final selectedDate = ref.read(nutritionProvider.notifier).selectedDate;
+    final selectedDate = ref.watch(nutritionDateProvider);
     // final theme = Theme.of(context); // Unused
 
     final logs = foodState.value ?? [];

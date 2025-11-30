@@ -1,5 +1,7 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'sleep_model.dart';
+import 'sleep_goal_model.dart';
 
 class SleepRepository {
   final SupabaseClient _client;
@@ -27,7 +29,10 @@ class SleepRepository {
     return (response as List).map((e) => SleepLog.fromJson(e)).toList();
   }
 
-  Future<List<SleepLog>> getSleepLogsForRange(DateTime start, DateTime end) async {
+  Future<List<SleepLog>> getSleepLogsForRange(
+    DateTime start,
+    DateTime end,
+  ) async {
     final userId = _client.auth.currentUser?.id;
     if (userId == null) return [];
 
@@ -45,7 +50,7 @@ class SleepRepository {
   Future<void> addSleepLog(SleepLog log) async {
     await _client.from('sleep_logs').insert(log.toJson());
   }
-  
+
   // Optional: Get latest sleep log for dashboard
   Future<SleepLog?> getLatestSleepLog() async {
     final userId = _client.auth.currentUser?.id;
@@ -61,5 +66,18 @@ class SleepRepository {
 
     if (response == null) return null;
     return SleepLog.fromJson(response);
+  }
+
+  // --- Sleep Goal Methods (Local Persistence) ---
+  Future<SleepGoal?> getSleepGoal() async {
+    final prefs = await SharedPreferences.getInstance();
+    final minutes = prefs.getInt('sleep_goal_minutes');
+    if (minutes == null) return null;
+    return SleepGoal(targetMinutes: minutes, createdAt: DateTime.now());
+  }
+
+  Future<void> setSleepGoal(int minutes) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt('sleep_goal_minutes', minutes);
   }
 }

@@ -13,6 +13,8 @@ import 'package:gainers/features/hydration/providers/hydration_provider.dart';
 import 'package:gainers/features/hydration/ui/hydration_screen.dart';
 import 'package:intl/intl.dart';
 
+import 'package:gainers/features/sleep/providers/sleep_provider.dart';
+
 class DashboardScreen extends ConsumerWidget {
   const DashboardScreen({super.key});
 
@@ -23,6 +25,12 @@ class DashboardScreen extends ConsumerWidget {
     final healthAsync = ref.watch(healthProvider);
     final nutritionAsync = ref.watch(nutritionProvider);
     final hydrationAsync = ref.watch(hydrationProvider);
+
+    // Watch sleep logs for today
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final sleepAsync = ref.watch(weeklySleepLogsProvider(today));
+
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
 
@@ -327,7 +335,7 @@ class DashboardScreen extends ConsumerWidget {
                             data: (logs) {
                               final total = logs.fold(
                                 0,
-                                (sum, item) => sum + item.amount,
+                                (sum, item) => sum + item.amountMl,
                               );
                               return RichText(
                                 text: TextSpan(
@@ -394,12 +402,33 @@ class DashboardScreen extends ConsumerWidget {
                             ),
                           ),
                           const SizedBox(height: 4),
-                          Text(
-                            '7h 30m',
-                            style: theme.textTheme.titleLarge?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              color: isDark ? Colors.white : Colors.black87,
-                            ),
+                          sleepAsync.when(
+                            data: (logs) {
+                              // Filter for today's logs (start time is today)
+                              final now = DateTime.now();
+                              final todayLogs = logs.where((log) {
+                                return log.startTime.year == now.year &&
+                                    log.startTime.month == now.month &&
+                                    log.startTime.day == now.day;
+                              });
+
+                              final totalMinutes = todayLogs.fold<int>(
+                                0,
+                                (sum, log) => sum + log.durationMinutes,
+                              );
+                              final hours = totalMinutes ~/ 60;
+                              final minutes = totalMinutes % 60;
+
+                              return Text(
+                                '${hours}h ${minutes}m',
+                                style: theme.textTheme.titleLarge?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  color: isDark ? Colors.white : Colors.black87,
+                                ),
+                              );
+                            },
+                            loading: () => const Text('Loading...'),
+                            error: (_, __) => const Text('--'),
                           ),
                         ],
                       ),

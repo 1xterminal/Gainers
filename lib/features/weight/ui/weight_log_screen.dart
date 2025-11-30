@@ -31,21 +31,25 @@ class _WeightLogScreenState extends ConsumerState<WeightLogScreen> {
         centerTitle: true,
         elevation: 0,
         backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-        titleTextStyle: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+        titleTextStyle: Theme.of(
+          context,
+        ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
       ),
       body: weightState.when(
         data: (logs) {
           // Get latest log from the list
           final latestLog = logs.isNotEmpty ? logs.first : null;
-          
+
           return profileAsync.when(
             data: (profile) {
               // Priority: Latest Log > Profile > 0
               final weight = latestLog?.weight ?? profile?.weightKg ?? 0.0;
               final heightCm = profile?.heightCm ?? 0;
               final heightM = heightCm / 100.0;
-              final bmi = (heightM > 0 && weight > 0) ? weight / (heightM * heightM) : 0.0;
-              
+              final bmi = (heightM > 0 && weight > 0)
+                  ? weight / (heightM * heightM)
+                  : 0.0;
+
               final muscle = latestLog?.skeletalMuscle;
               final fat = latestLog?.bodyFat;
 
@@ -59,36 +63,50 @@ class _WeightLogScreenState extends ConsumerState<WeightLogScreen> {
                           // Date Wheel
                           HorizontalDateWheel(
                             selectedDate: selectedDate,
-                            onDateSelected: (date) => weightNotifier.setDate(date),
+                            onDateSelected: (date) =>
+                                weightNotifier.setDate(date),
                           ),
                           const SizedBox(height: 24),
-                          
+
                           // Main Weight Card
                           Container(
                             width: double.infinity,
-                            padding: const EdgeInsets.symmetric(vertical: 48, horizontal: 24),
+                            padding: const EdgeInsets.symmetric(
+                              vertical: 48,
+                              horizontal: 24,
+                            ),
                             decoration: BoxDecoration(
                               color: Theme.of(context).cardColor,
                               borderRadius: BorderRadius.circular(32),
                             ),
                             child: Column(
                               children: [
-                                const Icon(Icons.monitor_weight, color: Colors.green, size: 32),
+                                const Icon(
+                                  Icons.monitor_weight,
+                                  color: Colors.green,
+                                  size: 32,
+                                ),
                                 const SizedBox(height: 16),
                                 Row(
                                   mainAxisAlignment: MainAxisAlignment.center,
-                                  crossAxisAlignment: CrossAxisAlignment.baseline,
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.baseline,
                                   textBaseline: TextBaseline.alphabetic,
                                   children: [
                                     TweenAnimationBuilder<double>(
-                                      tween: Tween<double>(begin: 0, end: weight),
+                                      tween: Tween<double>(
+                                        begin: 0,
+                                        end: weight,
+                                      ),
                                       duration: const Duration(seconds: 1),
                                       curve: Curves.easeOutExpo,
                                       builder: (context, value, child) {
                                         return Text(
                                           value.toStringAsFixed(1),
                                           style: TextStyle(
-                                            color: Theme.of(context).textTheme.bodyLarge?.color,
+                                            color: Theme.of(
+                                              context,
+                                            ).textTheme.bodyLarge?.color,
                                             fontSize: 64,
                                             fontWeight: FontWeight.bold,
                                           ),
@@ -123,96 +141,172 @@ class _WeightLogScreenState extends ConsumerState<WeightLogScreen> {
                               children: [
                                 // BMI Section
                                 Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
                                   children: [
-                                    Text('BMI >', style: TextStyle(color: Theme.of(context).textTheme.bodyLarge?.color, fontSize: 16)),
-                                    Icon(Icons.info_outline, color: Colors.grey[600], size: 20),
+                                    Text(
+                                      'BMI >',
+                                      style: TextStyle(
+                                        color: Theme.of(
+                                          context,
+                                        ).textTheme.bodyLarge?.color,
+                                        fontSize: 16,
+                                      ),
+                                    ),
+                                    Icon(
+                                      Icons.info_outline,
+                                      color: Colors.grey[600],
+                                      size: 20,
+                                    ),
                                   ],
                                 ),
                                 const SizedBox(height: 8),
                                 Text(
                                   bmi.toStringAsFixed(1),
                                   style: TextStyle(
-                                    color: Theme.of(context).textTheme.bodyLarge?.color,
+                                    color: Theme.of(
+                                      context,
+                                    ).textTheme.bodyLarge?.color,
                                     fontSize: 24,
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
                                 const SizedBox(height: 8),
-                                _buildProgressBar(value: (bmi / 40).clamp(0.0, 1.0), color: Colors.green),
+                                _buildProgressBar(
+                                  value: (bmi / 40).clamp(0.0, 1.0),
+                                  color: Colors.green,
+                                ),
                                 const SizedBox(height: 4),
                                 Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
                                   children: [
-                                    Text('18.5', style: TextStyle(color: Colors.grey[600], fontSize: 12)),
-                                    Text('25.0', style: TextStyle(color: Colors.grey[600], fontSize: 12)),
+                                    Text(
+                                      '18.5',
+                                      style: TextStyle(
+                                        color: Colors.grey[600],
+                                        fontSize: 12,
+                                      ),
+                                    ),
+                                    Text(
+                                      '25.0',
+                                      style: TextStyle(
+                                        color: Colors.grey[600],
+                                        fontSize: 12,
+                                      ),
+                                    ),
                                   ],
                                 ),
-                                
+
                                 const SizedBox(height: 24),
-                                Divider(color: Theme.of(context).dividerColor, height: 1),
+                                Divider(
+                                  color: Theme.of(context).dividerColor,
+                                  height: 1,
+                                ),
                                 const SizedBox(height: 24),
 
                                 // Skeletal Muscle Section
                                 Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
                                   children: [
-                                    Text('Skeletal Muscle >', style: TextStyle(color: Theme.of(context).textTheme.bodyLarge?.color, fontSize: 16)),
-                                    Icon(Icons.info_outline, color: Colors.grey[600], size: 20),
+                                    Text(
+                                      'Skeletal Muscle >',
+                                      style: TextStyle(
+                                        color: Theme.of(
+                                          context,
+                                        ).textTheme.bodyLarge?.color,
+                                        fontSize: 16,
+                                      ),
+                                    ),
+                                    Icon(
+                                      Icons.info_outline,
+                                      color: Colors.grey[600],
+                                      size: 20,
+                                    ),
                                   ],
                                 ),
                                 const SizedBox(height: 8),
                                 Text(
-                                  muscle != null ? '${muscle.toStringAsFixed(1)} kg' : '--', 
+                                  muscle != null
+                                      ? '${muscle.toStringAsFixed(1)} kg'
+                                      : '--',
                                   style: TextStyle(
-                                    color: Theme.of(context).textTheme.bodyLarge?.color,
+                                    color: Theme.of(
+                                      context,
+                                    ).textTheme.bodyLarge?.color,
                                     fontSize: 24,
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
                                 const SizedBox(height: 8),
                                 _buildProgressBar(
-                                  value: muscle != null ? (muscle / (weight > 0 ? weight : 100)).clamp(0.0, 1.0) : 0.0, 
-                                  color: Colors.blue
+                                  value: muscle != null
+                                      ? (muscle / (weight > 0 ? weight : 100))
+                                            .clamp(0.0, 1.0)
+                                      : 0.0,
+                                  color: Colors.blue,
                                 ),
-                                
+
                                 const SizedBox(height: 24),
-                                Divider(color: Theme.of(context).dividerColor, height: 1),
+                                Divider(
+                                  color: Theme.of(context).dividerColor,
+                                  height: 1,
+                                ),
                                 const SizedBox(height: 24),
 
                                 // Body Fat Section
                                 Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
                                   children: [
-                                    Text('Body Fat >', style: TextStyle(color: Theme.of(context).textTheme.bodyLarge?.color, fontSize: 16)),
-                                    Icon(Icons.info_outline, color: Colors.grey[600], size: 20),
+                                    Text(
+                                      'Body Fat >',
+                                      style: TextStyle(
+                                        color: Theme.of(
+                                          context,
+                                        ).textTheme.bodyLarge?.color,
+                                        fontSize: 16,
+                                      ),
+                                    ),
+                                    Icon(
+                                      Icons.info_outline,
+                                      color: Colors.grey[600],
+                                      size: 20,
+                                    ),
                                   ],
                                 ),
                                 const SizedBox(height: 8),
                                 Text(
-                                  fat != null ? '${fat.toStringAsFixed(1)} %' : '--', 
+                                  fat != null
+                                      ? '${fat.toStringAsFixed(1)} %'
+                                      : '--',
                                   style: TextStyle(
-                                    color: Theme.of(context).textTheme.bodyLarge?.color,
+                                    color: Theme.of(
+                                      context,
+                                    ).textTheme.bodyLarge?.color,
                                     fontSize: 24,
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
                                 const SizedBox(height: 8),
                                 _buildProgressBar(
-                                  value: fat != null ? (fat / 50).clamp(0.0, 1.0) : 0.0, 
-                                  color: Colors.orange
+                                  value: fat != null
+                                      ? (fat / 50).clamp(0.0, 1.0)
+                                      : 0.0,
+                                  color: Colors.orange,
                                 ),
                               ],
                             ),
                           ),
-                          
+
                           const SizedBox(height: 24),
-                          
+
                           // History List
                           recentLogsAsync.when(
-                            data: (logs) => logs.isNotEmpty 
-                              ? WeightHistoryList(logs: logs)
-                              : const SizedBox.shrink(),
+                            data: (logs) => logs.isNotEmpty
+                                ? WeightHistoryList(logs: logs)
+                                : const SizedBox.shrink(),
                             loading: () => const SizedBox.shrink(),
                             error: (_, __) => const SizedBox.shrink(),
                           ),
@@ -220,21 +314,30 @@ class _WeightLogScreenState extends ConsumerState<WeightLogScreen> {
                       ),
                     ),
                   ),
-                  
+
                   // Bottom Button
                   Padding(
                     padding: const EdgeInsets.all(24.0),
                     child: SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
-                        onPressed: () => _showInputModal(context, weight, muscle, fat),
+                        onPressed: () =>
+                            _showInputModal(context, weight, muscle, fat),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.green,
                           foregroundColor: Colors.white,
                           padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(24),
+                          ),
                         ),
-                        child: const Text('Enter data', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                        child: const Text(
+                          'Enter data',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                       ),
                     ),
                   ),
@@ -242,11 +345,25 @@ class _WeightLogScreenState extends ConsumerState<WeightLogScreen> {
               );
             },
             loading: () => const Center(child: CircularProgressIndicator()),
-            error: (err, stack) => Center(child: Text('Error loading profile: $err', style: TextStyle(color: Theme.of(context).textTheme.bodyLarge?.color))),
+            error: (err, stack) => Center(
+              child: Text(
+                'Error loading profile: $err',
+                style: TextStyle(
+                  color: Theme.of(context).textTheme.bodyLarge?.color,
+                ),
+              ),
+            ),
           );
         },
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (err, stack) => Center(child: Text('Error loading weight log: $err', style: TextStyle(color: Theme.of(context).textTheme.bodyLarge?.color))),
+        error: (err, stack) => Center(
+          child: Text(
+            'Error loading weight log: $err',
+            style: TextStyle(
+              color: Theme.of(context).textTheme.bodyLarge?.color,
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -272,7 +389,12 @@ class _WeightLogScreenState extends ConsumerState<WeightLogScreen> {
     );
   }
 
-  void _showInputModal(BuildContext context, double currentWeight, double? currentMuscle, double? currentFat) {
+  void _showInputModal(
+    BuildContext context,
+    double currentWeight,
+    double? currentMuscle,
+    double? currentFat,
+  ) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -284,7 +406,10 @@ class _WeightLogScreenState extends ConsumerState<WeightLogScreen> {
         onSave: (newWeight, newMuscle, newFat, notes) async {
           final notifier = ref.read(weightProvider.notifier);
           final userId = Supabase.instance.client.auth.currentUser?.id;
-          
+
+          final navigator = Navigator.of(context);
+          final messenger = ScaffoldMessenger.of(context);
+
           await notifier.addLog(
             weight: newWeight,
             date: DateTime.now(),
@@ -292,15 +417,17 @@ class _WeightLogScreenState extends ConsumerState<WeightLogScreen> {
             bodyFat: newFat,
             notes: notes,
           );
-          
+
           // Refresh profile to update dashboard
           if (userId != null) {
-             ref.invalidate(getProfileProvider(userId));
+            ref.invalidate(getProfileProvider(userId));
           }
-          
+
           if (mounted) {
-            Navigator.pop(context);
-            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Data saved!')));
+            navigator.pop();
+            messenger.showSnackBar(
+              const SnackBar(content: Text('Data saved!')),
+            );
           }
         },
       ),

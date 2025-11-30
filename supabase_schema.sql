@@ -39,6 +39,7 @@ create table public.profiles (
   weight_kg numeric(6,2),
   activity_goal text,
   unit_preference text default 'metric',
+  hydration_target int default 2000,
   created_at timestamptz default now()
 );
 
@@ -90,7 +91,10 @@ create table public.weight_logs (
   id bigserial primary key,
   user_id uuid references public.profiles(id) on delete cascade,
   created_at timestamptz default now(),
-  weight_kg numeric(6,2) not null
+  weight_kg numeric(6,2) not null,
+  skeletal_muscle numeric(6,2),
+  body_fat numeric(6,2),
+  notes text
 );
 
 -- 1.7. Workout sessions

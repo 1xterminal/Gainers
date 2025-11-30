@@ -4,6 +4,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:gainers/features/auth/ui/auth_gate.dart'; // Import the Gatekeeper
 import 'package:gainers/core/theme/app_theme.dart';
+import 'package:gainers/core/services/notification_service.dart';
 
 void main() async {
   // 1. Start the Engine
@@ -18,7 +19,12 @@ void main() async {
     anonKey: dotenv.env['SUPABASE_ANON_KEY'] ?? '',
   );
 
-  // 3. Inject State Management (Riverpod) & Run App
+  // 3. Initialize Notifications
+  final notificationService = NotificationService();
+  await notificationService.init();
+  await notificationService.requestPermissions();
+
+  // 4. Inject State Management (Riverpod) & Run App
   runApp(const ProviderScope(child: MyApp()));
 }
 

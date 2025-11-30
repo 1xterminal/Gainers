@@ -36,7 +36,7 @@ class _HydrationScreenState extends ConsumerState<HydrationScreen> {
   Widget build(BuildContext context) {
     final hydrationState = ref.watch(hydrationProvider);
     final notifier = ref.read(hydrationProvider.notifier);
-    final selectedDate = ref.watch(hydrationProvider.notifier).selectedDate;
+    final selectedDate = ref.watch(hydrationDateProvider);
     final dailyTargetAsync = ref.watch(dailyTargetProvider);
     final dailyTarget = dailyTargetAsync.value ?? 2000;
 
@@ -46,10 +46,10 @@ class _HydrationScreenState extends ConsumerState<HydrationScreen> {
       if (next.hasValue && next.value != null) {
         final totalIntake = next.value!.fold(
           0,
-          (sum, item) => sum + item.amount,
+          (sum, item) => sum + item.amountMl,
         );
         final previousTotal =
-            previous?.value?.fold(0, (sum, item) => sum + item.amount) ?? 0;
+            previous?.value?.fold(0, (sum, item) => sum + item.amountMl) ?? 0;
 
         if (totalIntake >= dailyTarget && previousTotal < dailyTarget) {
           _confettiController.play();
@@ -72,212 +72,223 @@ class _HydrationScreenState extends ConsumerState<HydrationScreen> {
       ),
       body: Stack(
         children: [
-          hydrationState.when(
-            data: (logs) {
-              final totalIntake = logs.fold(
-                0,
-                (sum, item) => sum + item.amount,
-              );
-              final progress = (totalIntake / dailyTarget).clamp(0.0, 1.0);
-              final percentage = (progress * 100).toInt();
+          SingleChildScrollView(
+            child: Column(
+              children: [
+                const SizedBox(height: 24),
+                // Date Wheel
+                HorizontalDateWheel(
+                  selectedDate: selectedDate,
+                  onDateSelected: (date) =>
+                      ref.read(hydrationDateProvider.notifier).setDate(date),
+                ),
+                const SizedBox(height: 24),
 
-              // Motivational Text Logic
-              String motivationalText = "Start your day!";
-              if (percentage >= 100) {
-                motivationalText = "Hydrated & Healthy! 🎉";
-              } else if (percentage >= 50) {
-                motivationalText = "Halfway there! 🌊";
-              } else if (percentage > 0) {
-                motivationalText = "Keep drinking!";
-              }
+                hydrationState.when(
+                  data: (logs) {
+                    final totalIntake = logs.fold(
+                      0,
+                      (sum, item) => sum + item.amountMl,
+                    );
+                    final progress = (totalIntake / dailyTarget).clamp(
+                      0.0,
+                      1.0,
+                    );
+                    final percentage = (progress * 100).toInt();
 
-              return SingleChildScrollView(
-                child: Column(
-                  children: [
-                    const SizedBox(height: 24),
+                    // Motivational Text Logic
+                    String motivationalText = "Start your day!";
+                    if (percentage >= 100) {
+                      motivationalText = "Hydrated & Healthy! 🎉";
+                    } else if (percentage >= 50) {
+                      motivationalText = "Halfway there! 🌊";
+                    } else if (percentage > 0) {
+                      motivationalText = "Keep drinking!";
+                    }
 
-                    // Date Wheel
-                    HorizontalDateWheel(
-                      selectedDate: selectedDate,
-                      onDateSelected: (date) => notifier.setDate(date),
-                    ),
-
-                    const SizedBox(height: 24),
-
-                    // 1. Header: Total vs Target
-                    Column(
+                    return Column(
                       children: [
-                        Text(
-                          'Today\'s Intake',
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: Colors.grey[600],
-                            letterSpacing: 1.2,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
+                        // 1. Header: Total vs Target
+                        Column(
                           children: [
-                            RichText(
-                              text: TextSpan(
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .headlineMedium
-                                    ?.copyWith(
-                                      fontWeight: FontWeight.bold,
-                                      color: Theme.of(context).primaryColor,
-                                    ),
-                                children: [
-                                  WidgetSpan(
-                                    alignment: PlaceholderAlignment.baseline,
-                                    baseline: TextBaseline.alphabetic,
-                                    child: TweenAnimationBuilder<int>(
-                                      tween: IntTween(
-                                        begin: 0,
-                                        end: totalIntake,
-                                      ),
-                                      duration: const Duration(
-                                        milliseconds: 1000,
-                                      ),
-                                      curve: Curves.easeOutExpo,
-                                      builder: (context, value, child) {
-                                        return Text(
-                                          '$value',
-                                          style: Theme.of(context)
-                                              .textTheme
-                                              .headlineMedium
-                                              ?.copyWith(
-                                                fontWeight: FontWeight.bold,
-                                                color: Theme.of(
-                                                  context,
-                                                ).primaryColor,
-                                              ),
-                                        );
-                                      },
-                                    ),
-                                  ),
-                                  TextSpan(
-                                    text: ' / $dailyTarget ml',
-                                    style: TextStyle(
-                                      fontSize: 18,
-                                      color: Colors.grey[400],
-                                      fontWeight: FontWeight.normal,
-                                    ),
-                                  ),
-                                ],
+                            Text(
+                              'Today\'s Intake',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: Colors.grey[600],
+                                letterSpacing: 1.2,
                               ),
                             ),
-                            const SizedBox(width: 8),
-                            IconButton(
-                              icon: const Icon(Icons.edit_outlined, size: 20),
-                              color: Colors.grey[400],
-                              onPressed: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) =>
-                                        const HydrationTargetScreen(),
+                            const SizedBox(height: 8),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                RichText(
+                                  text: TextSpan(
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .headlineMedium
+                                        ?.copyWith(
+                                          fontWeight: FontWeight.bold,
+                                          color: Theme.of(context).primaryColor,
+                                        ),
+                                    children: [
+                                      WidgetSpan(
+                                        alignment:
+                                            PlaceholderAlignment.baseline,
+                                        baseline: TextBaseline.alphabetic,
+                                        child: TweenAnimationBuilder<int>(
+                                          tween: IntTween(
+                                            begin: 0,
+                                            end: totalIntake,
+                                          ),
+                                          duration: const Duration(
+                                            milliseconds: 1000,
+                                          ),
+                                          curve: Curves.easeOutExpo,
+                                          builder: (context, value, child) {
+                                            return Text(
+                                              '$value',
+                                              style: Theme.of(context)
+                                                  .textTheme
+                                                  .headlineMedium
+                                                  ?.copyWith(
+                                                    fontWeight: FontWeight.bold,
+                                                    color: Theme.of(
+                                                      context,
+                                                    ).primaryColor,
+                                                  ),
+                                            );
+                                          },
+                                        ),
+                                      ),
+                                      TextSpan(
+                                        text: ' / $dailyTarget ml',
+                                        style: TextStyle(
+                                          fontSize: 18,
+                                          color: Colors.grey[400],
+                                          fontWeight: FontWeight.normal,
+                                        ),
+                                      ),
+                                    ],
                                   ),
-                                );
-                              },
+                                ),
+                                const SizedBox(width: 8),
+                                IconButton(
+                                  icon: const Icon(
+                                    Icons.edit_outlined,
+                                    size: 20,
+                                  ),
+                                  color: Colors.grey[400],
+                                  onPressed: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) =>
+                                            const HydrationTargetScreen(),
+                                      ),
+                                    );
+                                  },
+                                ),
+                              ],
                             ),
                           ],
                         ),
-                      ],
-                    ),
 
-                    const SizedBox(height: 32),
+                        const SizedBox(height: 32),
 
-                    // 2. The Visual: Filling Circle
-                    WaterProgressCircle(
-                      progress: progress,
-                      percentage: percentage,
-                    ),
+                        // 2. The Visual: Filling Circle
+                        WaterProgressCircle(
+                          progress: progress,
+                          percentage: percentage,
+                        ),
 
-                    const SizedBox(height: 32),
+                        const SizedBox(height: 32),
 
-                    // 3. Motivational Text
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 32),
-                      alignment: Alignment.center,
-                      child: AnimatedSwitcher(
-                        duration: const Duration(milliseconds: 500),
-                        transitionBuilder:
-                            (Widget child, Animation<double> animation) {
-                              return FadeTransition(
-                                opacity: animation,
-                                child: SlideTransition(
-                                  position: Tween<Offset>(
-                                    begin: const Offset(0.0, 0.5),
-                                    end: Offset.zero,
-                                  ).animate(animation),
-                                  child: child,
-                                ),
-                              );
-                            },
-                        child: Text(
-                          motivationalText,
-                          key: ValueKey(motivationalText),
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.cyan,
-                            letterSpacing: 0.5,
+                        // 3. Motivational Text
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 32),
+                          alignment: Alignment.center,
+                          child: AnimatedSwitcher(
+                            duration: const Duration(milliseconds: 500),
+                            transitionBuilder:
+                                (Widget child, Animation<double> animation) {
+                                  return FadeTransition(
+                                    opacity: animation,
+                                    child: SlideTransition(
+                                      position: Tween<Offset>(
+                                        begin: const Offset(0.0, 0.5),
+                                        end: Offset.zero,
+                                      ).animate(animation),
+                                      child: child,
+                                    ),
+                                  );
+                                },
+                            child: Text(
+                              motivationalText,
+                              key: ValueKey(motivationalText),
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.blueAccent,
+                                letterSpacing: 0.5,
+                              ),
+                            ),
                           ),
                         ),
-                      ),
-                    ),
 
-                    const SizedBox(height: 32),
+                        const SizedBox(height: 32),
 
-                    // 4. Quick Add Buttons
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 24),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: [
-                          _buildQuickAddButton(
-                            context,
-                            icon: Icons.local_drink_outlined,
-                            label: '250ml',
-                            amount: 250,
-                            onTap: () => notifier.addLog(250),
+                        // 4. Quick Add Buttons
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 24),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                            children: [
+                              _buildQuickAddButton(
+                                context,
+                                icon: Icons.local_drink_outlined,
+                                label: '250ml',
+                                amount: 250,
+                                onTap: () => notifier.addLog(250),
+                              ),
+                              _buildQuickAddButton(
+                                context,
+                                icon: Icons.water_drop_outlined,
+                                label: '500ml',
+                                amount: 500,
+                                onTap: () => notifier.addLog(500),
+                              ),
+                              _buildQuickAddButton(
+                                context,
+                                icon: Icons.add,
+                                label: 'Custom',
+                                amount: 0,
+                                onTap: () =>
+                                    _showCustomAmountDialog(context, notifier),
+                              ),
+                            ],
                           ),
-                          _buildQuickAddButton(
-                            context,
-                            icon: Icons.water_drop_outlined,
-                            label: '500ml',
-                            amount: 500,
-                            onTap: () => notifier.addLog(500),
-                          ),
-                          _buildQuickAddButton(
-                            context,
-                            icon: Icons.add,
-                            label: 'Custom',
-                            amount: 0,
-                            onTap: () =>
-                                _showCustomAmountDialog(context, notifier),
-                          ),
-                        ],
-                      ),
-                    ),
+                        ),
 
-                    const SizedBox(height: 24),
+                        const SizedBox(height: 24),
 
-                    // 5. Daily Log (Timeline)
-                    HydrationHistoryList(
-                      logs: logs,
-                      selectedDate: selectedDate,
-                      notifier: notifier,
-                    ),
-                  ],
+                        // 5. Daily Log (Timeline)
+                        HydrationHistoryList(
+                          logs: logs,
+                          selectedDate: selectedDate,
+                          notifier: notifier,
+                        ),
+                      ],
+                    );
+                  },
+                  loading: () =>
+                      const Center(child: CircularProgressIndicator()),
+                  error: (err, stack) => Center(child: Text('Error: $err')),
                 ),
-              );
-            },
-            loading: () => const Center(child: CircularProgressIndicator()),
-            error: (err, stack) => Center(child: Text('Error: $err')),
+              ],
+            ),
           ),
           Align(
             alignment: Alignment.topCenter,
@@ -306,6 +317,7 @@ class _HydrationScreenState extends ConsumerState<HydrationScreen> {
     required int amount,
     required VoidCallback onTap,
   }) {
+    final color = Colors.blueAccent;
     return Column(
       children: [
         InkWell(
@@ -319,14 +331,14 @@ class _HydrationScreenState extends ConsumerState<HydrationScreen> {
               shape: BoxShape.circle,
               boxShadow: [
                 BoxShadow(
-                  color: Colors.cyan.withValues(alpha: 0.1),
+                  color: color.withValues(alpha: 0.2),
                   blurRadius: 8,
                   offset: const Offset(0, 4),
                 ),
               ],
-              border: Border.all(color: Colors.cyan.withValues(alpha: 0.1)),
+              border: Border.all(color: color.withValues(alpha: 0.3)),
             ),
-            child: Icon(icon, color: Colors.cyan),
+            child: Icon(icon, color: color),
           ),
         ),
         const SizedBox(height: 8),
@@ -343,21 +355,30 @@ class _HydrationScreenState extends ConsumerState<HydrationScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Add Water'),
+        backgroundColor: Theme.of(context).cardColor,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        title: Text('Add Water', style: Theme.of(context).textTheme.titleLarge),
         content: TextField(
           controller: controller,
           keyboardType: TextInputType.number,
           autofocus: true,
-          decoration: const InputDecoration(
+          style: Theme.of(context).textTheme.bodyLarge,
+          decoration: InputDecoration(
             labelText: 'Amount (ml)',
             hintText: 'e.g. 300',
             suffixText: 'ml',
+            filled: true,
+            fillColor: Theme.of(context).scaffoldBackgroundColor,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: BorderSide.none,
+            ),
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            child: Text('Cancel', style: TextStyle(color: Colors.grey[600])),
           ),
           ElevatedButton(
             onPressed: () {
@@ -367,6 +388,13 @@ class _HydrationScreenState extends ConsumerState<HydrationScreen> {
                 Navigator.pop(context);
               }
             },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Theme.of(context).primaryColor,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+            ),
             child: const Text('Add'),
           ),
         ],

@@ -82,7 +82,7 @@ class _WavePainter extends CustomPainter {
 
     path.moveTo(0, baseHeight);
 
-    for (double i = 0; i <= size.width; i++) {
+    for (double i = 0; i <= size.width; i += 5) {
       path.lineTo(
         i,
         baseHeight +
@@ -108,7 +108,7 @@ class _WavePainter extends CustomPainter {
     final path2 = Path();
     path2.moveTo(0, baseHeight);
 
-    for (double i = 0; i <= size.width; i++) {
+    for (double i = 0; i <= size.width; i += 5) {
       path2.lineTo(
         i,
         baseHeight +

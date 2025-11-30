@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:gainers/features/activity/data/models/fitness_video_model.dart';
@@ -89,52 +90,38 @@ class _ExerciseTutorialScreenState
       body: CustomScrollView(
         slivers: [
           // -- app bar --
+          // -- app bar --
           SliverAppBar(
-            expandedHeight: 120,
             floating: true,
             pinned: true,
             backgroundColor: theme.scaffoldBackgroundColor,
             elevation: 0,
-            flexibleSpace: FlexibleSpaceBar(
-              titlePadding: const EdgeInsets.only(left: 24, bottom: 16),
-              title: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Here\'s Some',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: Colors.grey.shade600,
-                      fontSize: 12,
-                    ),
-                  ),
-                  Text(
-                    'Resources',
-                    style: theme.textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: theme.primaryColor,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            actions: [
-              Padding(
-                padding: const EdgeInsets.only(right: 16),
-                child: CircleAvatar(
-                  backgroundColor: theme.primaryColor.withValues(alpha: 0.1),
-                  child: IconButton(
-                    icon: Icon(
-                      Icons.notifications_none,
-                      color: theme.primaryColor,
-                    ),
-                    onPressed: () {
-                      // TODO: implement notification
-                    },
-                  ),
+            title: Padding(
+              padding: const EdgeInsets.only(left: 8.0),
+              child: SvgPicture.asset(
+                'images/Logo-Gainers.svg',
+                height: 24,
+                colorFilter: ColorFilter.mode(
+                  theme.primaryColor,
+                  BlendMode.srcIn,
                 ),
               ),
-            ],
+            ),
+            centerTitle: false,
+          ),
+
+          // -- header --
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(24, 16, 24, 0),
+              child: Text(
+                'Resources',
+                style: theme.textTheme.displaySmall?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: theme.primaryColor,
+                ),
+              ),
+            ),
           ),
 
           // -- search bar --
@@ -179,8 +166,8 @@ class _ExerciseTutorialScreenState
             loading: () => const SliverFillRemaining(
               child: Center(child: CircularProgressIndicator()),
             ),
-            error: (error, stack) => const SliverFillRemaining(
-              child: Center(child: Text('No Such Video Exists.')),
+            error: (error, stack) => SliverFillRemaining(
+              child: Center(child: Text('Error: $error')),
             ),
           ),
         ],
