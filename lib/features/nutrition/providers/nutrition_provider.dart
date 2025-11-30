@@ -22,20 +22,15 @@ class NutritionDateNotifier extends Notifier<DateTime> {
 
 // 2. Async Notifier (Pengelola Data List Makanan)
 class NutritionNotifier extends AsyncNotifier<List<FoodLog>> {
-  late final NutritionRepository _repo;
-
   @override
   Future<List<FoodLog>> build() async {
-    _repo = ref.watch(nutritionRepositoryProvider);
+    final repo = ref.read(nutritionRepositoryProvider);
     final date = ref.watch(nutritionDateProvider);
-    return _loadFoodLogs(date);
-  }
-
-  Future<List<FoodLog>> _loadFoodLogs(DateTime date) async {
-    return _repo.getFoodLogs(date);
+    return repo.getFoodLogs(date);
   }
 
   Future<void> addLog(FoodLog log) async {
+    final repo = ref.read(nutritionRepositoryProvider);
     final previousState = state;
     // Optimistic update
     if (state.hasValue) {
@@ -44,10 +39,10 @@ class NutritionNotifier extends AsyncNotifier<List<FoodLog>> {
     }
 
     try {
-      await _repo.addFoodLog(log);
+      await repo.addFoodLog(log);
       // Silent reload to get the real ID and ensure consistency
       final date = ref.read(nutritionDateProvider);
-      final freshLogs = await _repo.getFoodLogs(date);
+      final freshLogs = await repo.getFoodLogs(date);
       state = AsyncValue.data(freshLogs);
     } catch (e, st) {
       // Revert on error
@@ -57,6 +52,7 @@ class NutritionNotifier extends AsyncNotifier<List<FoodLog>> {
   }
 
   Future<void> deleteLog(int id) async {
+    final repo = ref.read(nutritionRepositoryProvider);
     final previousState = state;
     // Optimistic update
     if (state.hasValue) {
@@ -67,10 +63,10 @@ class NutritionNotifier extends AsyncNotifier<List<FoodLog>> {
     }
 
     try {
-      await _repo.deleteFoodLog(id);
+      await repo.deleteFoodLog(id);
       // Silent reload
       final date = ref.read(nutritionDateProvider);
-      final freshLogs = await _repo.getFoodLogs(date);
+      final freshLogs = await repo.getFoodLogs(date);
       state = AsyncValue.data(freshLogs);
     } catch (e, st) {
       // Revert on error
@@ -80,6 +76,7 @@ class NutritionNotifier extends AsyncNotifier<List<FoodLog>> {
   }
 
   Future<void> updateLog(FoodLog log) async {
+    final repo = ref.read(nutritionRepositoryProvider);
     final previousState = state;
     // Optimistic update
     if (state.hasValue) {
@@ -93,10 +90,10 @@ class NutritionNotifier extends AsyncNotifier<List<FoodLog>> {
     }
 
     try {
-      await _repo.updateFoodLog(log);
+      await repo.updateFoodLog(log);
       // Silent reload
       final date = ref.read(nutritionDateProvider);
-      final freshLogs = await _repo.getFoodLogs(date);
+      final freshLogs = await repo.getFoodLogs(date);
       state = AsyncValue.data(freshLogs);
     } catch (e, st) {
       // Revert on error

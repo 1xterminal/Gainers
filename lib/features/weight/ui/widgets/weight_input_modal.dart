@@ -55,24 +55,32 @@ class _WeightInputModalState extends State<WeightInputModal> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    final backgroundColor = isDark ? Colors.black : theme.cardColor;
+    final surfaceColor = isDark ? const Color(0xFF151515) : const Color(0xFFF5F5F5);
+    final textColor = isDark ? Colors.white : Colors.black87;
+    final hintColor = isDark ? const Color(0xFF666666) : Colors.grey[600]!;
+    final labelColor = isDark ? const Color(0xFF666666) : Colors.grey[700]!;
+    
     return Container(
       height: MediaQuery.of(context).size.height * 0.9,
       padding: const EdgeInsets.all(24),
-      decoration: const BoxDecoration(
-        color: Colors.black,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+      decoration: BoxDecoration(
+        color: backgroundColor,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
       ),
       child: Column(
         children: [
           const SizedBox(height: 8),
-          const Text('Weight (kg)', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+          Text('Weight (kg)', style: TextStyle(color: textColor, fontSize: 18, fontWeight: FontWeight.bold)),
           const SizedBox(height: 32),
           
           // Wheel Picker
           Container(
             height: 200,
             decoration: BoxDecoration(
-              color: const Color(0xFF151515),
+              color: surfaceColor,
               borderRadius: BorderRadius.circular(32),
             ),
             child: Stack(
@@ -100,7 +108,7 @@ class _WeightInputModalState extends State<WeightInputModal> {
                                 style: TextStyle(
                                   fontSize: isSelected ? 40 : 24,
                                   fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                                  color: isSelected ? Colors.white : Colors.grey[800],
+                                  color: isSelected ? textColor : (isDark ? Colors.grey[800] : Colors.grey[400]),
                                 ),
                               ),
                             );
@@ -109,9 +117,9 @@ class _WeightInputModalState extends State<WeightInputModal> {
                       ),
                     ),
                     const SizedBox(width: 8),
-                    const Padding(
-                      padding: EdgeInsets.only(bottom: 8.0),
-                      child: Text('.', style: TextStyle(color: Colors.white, fontSize: 40, fontWeight: FontWeight.bold)),
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 8.0),
+                      child: Text('.', style: TextStyle(color: textColor, fontSize: 40, fontWeight: FontWeight.bold)),
                     ),
                     const SizedBox(width: 8),
                     // Decimal Wheel
@@ -134,7 +142,7 @@ class _WeightInputModalState extends State<WeightInputModal> {
                                 style: TextStyle(
                                   fontSize: isSelected ? 40 : 24,
                                   fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                                  color: isSelected ? Colors.white : Colors.grey[800],
+                                  color: isSelected ? textColor : (isDark ? Colors.grey[800] : Colors.grey[400]),
                                 ),
                               ),
                             );
@@ -152,9 +160,9 @@ class _WeightInputModalState extends State<WeightInputModal> {
           const SizedBox(height: 24),
           
           // Extra Fields
-          _buildTextField('Skeletal muscle', _muscleController, 'kg'),
+          _buildTextField('Skeletal muscle', _muscleController, 'kg', surfaceColor, textColor, hintColor, labelColor, theme),
           const SizedBox(height: 16),
-          _buildTextField('Body fat', _fatController, '%'),
+          _buildTextField('Body fat', _fatController, '%', surfaceColor, textColor, hintColor, labelColor, theme),
           
           const SizedBox(height: 24),
           
@@ -162,20 +170,20 @@ class _WeightInputModalState extends State<WeightInputModal> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
             decoration: BoxDecoration(
-              color: const Color(0xFF151515),
+              color: surfaceColor,
               borderRadius: BorderRadius.circular(24),
             ),
             child: TextField(
               controller: _notesController,
-              decoration: const InputDecoration(
+              decoration: InputDecoration(
                 hintText: 'Add notes...',
-                hintStyle: TextStyle(color: Color(0xFF666666), fontSize: 16),
+                hintStyle: TextStyle(color: hintColor, fontSize: 16),
                 border: InputBorder.none,
                 contentPadding: EdgeInsets.zero,
                 isDense: true,
-                icon: Icon(Icons.edit_note, color: Color(0xFF666666)),
+                icon: Icon(Icons.edit_note, color: hintColor),
               ),
-              style: const TextStyle(color: Colors.white, fontSize: 16),
+              style: TextStyle(color: textColor, fontSize: 16),
             ),
           ),
           
@@ -189,7 +197,7 @@ class _WeightInputModalState extends State<WeightInputModal> {
                 style: TextButton.styleFrom(
                   padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
                 ),
-                child: const Text('Cancel', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+                child: Text('Cancel', style: TextStyle(color: textColor, fontSize: 16, fontWeight: FontWeight.bold)),
               ),
               const SizedBox(width: 16),
               Expanded(
@@ -202,7 +210,7 @@ class _WeightInputModalState extends State<WeightInputModal> {
                     widget.onSave(weight, muscle, fat, notes);
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF2C2C2C),
+                    backgroundColor: isDark ? const Color(0xFF2C2C2C) : theme.primaryColor,
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(32)),
@@ -219,38 +227,39 @@ class _WeightInputModalState extends State<WeightInputModal> {
     );
   }
 
-  Widget _buildTextField(String label, TextEditingController controller, String suffix) {
+  Widget _buildTextField(String label, TextEditingController controller, String suffix, 
+      Color surfaceColor, Color textColor, Color hintColor, Color labelColor, ThemeData theme) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
       decoration: BoxDecoration(
-        color: const Color(0xFF151515),
+        color: surfaceColor,
         borderRadius: BorderRadius.circular(24),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label, style: const TextStyle(color: Color(0xFF666666), fontSize: 12)),
+          Text(label, style: TextStyle(color: labelColor, fontSize: 12)),
           const SizedBox(height: 4),
           Row(
             children: [
               Expanded(
                 child: TextField(
                   controller: controller,
-                  decoration: const InputDecoration(
+                  decoration: InputDecoration(
                     border: InputBorder.none,
                     contentPadding: EdgeInsets.zero,
                     isDense: true,
                     hintText: '0',
-                    hintStyle: TextStyle(color: Color(0xFF333333)),
+                    hintStyle: TextStyle(color: hintColor.withOpacity(0.5)),
                   ),
-                  style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.bold),
+                  style: TextStyle(color: textColor, fontSize: 24, fontWeight: FontWeight.bold),
                   keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                  cursorColor: Colors.blue,
+                  cursorColor: theme.primaryColor,
                 ),
               ),
               Text(
                 suffix,
-                style: const TextStyle(color: Color(0xFF666666), fontSize: 16, fontWeight: FontWeight.bold),
+                style: TextStyle(color: hintColor, fontSize: 16, fontWeight: FontWeight.bold),
               ),
             ],
           ),
