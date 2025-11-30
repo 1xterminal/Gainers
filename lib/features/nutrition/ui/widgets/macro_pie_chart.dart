@@ -1,5 +1,6 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
+import '../../../../core/widgets/animated_counter.dart';
 
 class MacroPieChart extends StatefulWidget {
   final int protein;
@@ -95,6 +96,12 @@ class _MacroPieChartState extends State<MacroPieChart> {
                         ),
                       );
                     },
+                  AnimatedCounter(
+                    value: widget.totalCalories,
+                    style: theme.textTheme.headlineMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: theme.primaryColor,
+                    ),
                   ),
                   Text(
                     'Kcal',
