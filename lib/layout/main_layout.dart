@@ -1,37 +1,28 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gainers/features/dashboard/ui/dashboard_screen.dart';
-import 'package:gainers/features/profile/ui/profile_screen.dart';
-
 import 'package:gainers/features/activity/ui/exercise_tutorial_screen.dart';
 import 'package:gainers/features/sleep/ui/sleep_log_screen.dart';
 import 'package:gainers/features/weight/ui/weight_log_screen.dart';
+import 'package:gainers/features/profile/ui/profile_screen.dart';
+import 'package:gainers/features/progress/ui/progress_screen.dart';
+import 'package:gainers/layout/providers/navigation_provider.dart';
 
-class MainLayout extends ConsumerStatefulWidget {
+class MainLayout extends ConsumerWidget {
   const MainLayout({super.key});
 
   @override
-  ConsumerState<MainLayout> createState() => _MainLayoutState();
-}
+  Widget build(BuildContext context, WidgetRef ref) {
+    final selectedIndex = ref.watch(navigationIndexProvider);
+    final theme = Theme.of(context);
 
-class _MainLayoutState extends ConsumerState<MainLayout> {
-  int _selectedIndex = 0;
+    final screens = [
+      const DashboardScreen(),
+      const ExerciseTutorialScreen(),
+      const ProgressScreen(),
+      const ProfileScreen(),
+    ];
 
-  // The list of your 4 main tabs
-  final List<Widget> _pages = [
-    const DashboardScreen(),
-    const ExerciseTutorialScreen(),
-    const ProfileScreen(),
-  ];
-
-  void _onItemTapped(int index) {
-    setState(() {
-      _selectedIndex = index;
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
     return Scaffold(
       // Logic: Only show the "Quick Add" FAB on the Home Tab (Index 0)
       floatingActionButton: _selectedIndex == 0
@@ -93,31 +84,11 @@ class _MainLayoutState extends ConsumerState<MainLayout> {
                     label: 'Food',
                     onTap: () {},
                   ),
-                  _QuickAction(
-                    icon: Icons.bed,
-                    label: 'Sleep',
-                    onTap: () {
-                      Navigator.pop(context); // Close modal
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const SleepLogScreen(),
-                        ),
-                      );
-                    },
-                  ),
+                  _QuickAction(icon: Icons.bed, label: 'Sleep', onTap: () {}),
                   _QuickAction(
                     icon: Icons.monitor_weight,
                     label: 'Weight',
-                    onTap: () {
-                      Navigator.pop(context); // Close modal
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const WeightLogScreen(),
-                        ),
-                      );
-                    },
+                    onTap: () {},
                   ),
                 ],
               ),
