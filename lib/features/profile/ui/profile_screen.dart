@@ -43,7 +43,7 @@ class ProfileScreen extends ConsumerWidget {
                 'Account',
                 style: theme.textTheme.displaySmall?.copyWith(
                   fontWeight: FontWeight.bold,
-                  color: Colors.black87,
+                  color: theme.primaryColor,
                 ),
               ),
             ),

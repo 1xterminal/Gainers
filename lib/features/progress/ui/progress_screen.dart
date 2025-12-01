@@ -49,6 +49,8 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen>
 
   @override
   Widget build(BuildContext context) {
+		final theme = Theme.of(context);
+		
     return Scaffold(
       appBar: AppBar(
         title: Padding(
@@ -75,7 +77,7 @@ class _ProgressScreenState extends ConsumerState<ProgressScreen>
               'Progress',
               style: Theme.of(context).textTheme.displaySmall?.copyWith(
                 fontWeight: FontWeight.bold,
-                color: Colors.black87,
+                color: theme.primaryColor,
               ),
             ),
           ),
