@@ -58,4 +58,32 @@ class Profile {
       'hydration_target': hydrationTarget,
     };
   }
+
+  Profile copyWith({
+    String? id,
+    String? username,
+    String? displayName,
+    String? avatarUrl,
+    String? gender,
+    DateTime? dateOfBirth,
+    int? heightCm,
+    double? weightKg,
+    String? activityGoal,
+    String? unitPreference,
+    int? hydrationTarget,
+  }) {
+    return Profile(
+      id: id ?? this.id,
+      username: username ?? this.username,
+      displayName: displayName ?? this.displayName,
+      avatarUrl: avatarUrl ?? this.avatarUrl,
+      gender: gender ?? this.gender,
+      dateOfBirth: dateOfBirth ?? this.dateOfBirth,
+      heightCm: heightCm ?? this.heightCm,
+      weightKg: weightKg ?? this.weightKg,
+      activityGoal: activityGoal ?? this.activityGoal,
+      unitPreference: unitPreference ?? this.unitPreference,
+      hydrationTarget: hydrationTarget ?? this.hydrationTarget,
+    );
+  }
 }

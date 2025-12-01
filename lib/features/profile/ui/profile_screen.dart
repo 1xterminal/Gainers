@@ -5,6 +5,7 @@ import 'package:gainers/features/auth/providers/auth_provider.dart';
 import 'package:gainers/features/profile/providers/profile_provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:gainers/core/services/notification_service.dart';
+import 'package:gainers/features/profile/ui/edit_profile_screen.dart';
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
@@ -35,6 +36,26 @@ class ProfileScreen extends ConsumerWidget {
               ),
             ),
             centerTitle: false,
+            actions: [
+              profileAsync.when(
+                data: (profile) => profile != null
+                    ? IconButton(
+                        icon: Icon(Icons.edit, color: theme.primaryColor),
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) =>
+                                  EditProfileScreen(profile: profile),
+                            ),
+                          );
+                        },
+                      )
+                    : const SizedBox.shrink(),
+                loading: () => const SizedBox.shrink(),
+                error: (_, __) => const SizedBox.shrink(),
+              ),
+            ],
           ),
           SliverToBoxAdapter(
             child: Padding(
