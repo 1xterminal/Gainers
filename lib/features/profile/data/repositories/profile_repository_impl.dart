@@ -14,7 +14,7 @@ class ProfileRepositoryImpl implements ProfileRepository {
         .from('profiles')
         .select()
         .eq('id', userId)
-        .maybeSingle(); 
+        .maybeSingle();
 
     if (response == null) {
       return null;
@@ -24,8 +24,8 @@ class ProfileRepositoryImpl implements ProfileRepository {
   }
 
   @override
-  Future<void> createProfile(Profile profile) async {
-    // CHANGED: Use upsert instead of insert to handle existing rows safely
+  Future<void> updateProfile(Profile profile) async {
+    // Use upsert to handle both creation and updates
     await client.from('profiles').upsert(profile.toJson());
   }
 
@@ -42,8 +42,7 @@ class ProfileRepositoryImpl implements ProfileRepository {
     }
 
     final profile = Profile.fromJson(response);
-    
-    // This logic matches your UI now
+
     return profile.displayName != null &&
         profile.gender != null &&
         profile.dateOfBirth != null &&
