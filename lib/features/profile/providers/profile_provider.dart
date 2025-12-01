@@ -29,3 +29,12 @@ final createProfileProvider = Provider((ref) {
   final repo = ref.watch(profileRepositoryProvider);
   return CreateProfile(repo);
 });
+
+final updateProfileProvider = Provider((ref) {
+  final repo = ref.watch(profileRepositoryProvider);
+  return (Profile profile) async {
+    await repo.updateProfile(profile);
+    // Invalidate getProfileProvider to refresh UI
+    ref.invalidate(getProfileProvider(profile.id));
+  };
+});

@@ -7,6 +7,6 @@ class CreateProfile {
   CreateProfile(this.repository);
 
   Future<void> call(Profile profile) async {
-    await repository.createProfile(profile);
+    await repository.updateProfile(profile);
   }
 }
