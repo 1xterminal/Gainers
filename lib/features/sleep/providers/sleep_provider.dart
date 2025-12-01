@@ -8,26 +8,29 @@ final sleepRepositoryProvider = Provider((ref) {
   return SleepRepository(Supabase.instance.client);
 });
 
-class SleepNotifier extends AsyncNotifier<List<SleepLog>> {
-  DateTime _selectedDate = DateTime.now();
+final sleepDateProvider = NotifierProvider<SleepDateNotifier, DateTime>(
+  SleepDateNotifier.new,
+);
 
+class SleepDateNotifier extends Notifier<DateTime> {
+  @override
+  DateTime build() => DateTime.now();
+
+  void setDate(DateTime date) => state = date;
+}
+
+class SleepNotifier extends AsyncNotifier<List<SleepLog>> {
+  // Notifier for managing sleep logs
   @override
   Future<List<SleepLog>> build() async {
     final repo = ref.read(sleepRepositoryProvider);
-    return repo.getSleepLogs(_selectedDate);
+    final date = ref.watch(sleepDateProvider);
+    return repo.getSleepLogs(date);
   }
-
-  Future<void> setDate(DateTime date) async {
-    final repo = ref.read(sleepRepositoryProvider);
-    _selectedDate = date;
-    state = const AsyncValue.loading();
-    state = await AsyncValue.guard(() => repo.getSleepLogs(_selectedDate));
-  }
-
-  DateTime get selectedDate => _selectedDate;
 
   Future<void> addLog(DateTime startTime, DateTime endTime) async {
     final repo = ref.read(sleepRepositoryProvider);
+    final selectedDate = ref.read(sleepDateProvider);
     final user = Supabase.instance.client.auth.currentUser;
     if (user == null) return;
 
@@ -47,7 +50,7 @@ class SleepNotifier extends AsyncNotifier<List<SleepLog>> {
       await repo.addSleepLog(log);
       // Invalidate weekly provider to refresh chart
       ref.invalidate(weeklySleepLogsProvider);
-      return repo.getSleepLogs(_selectedDate);
+      return repo.getSleepLogs(selectedDate);
     });
   }
 }

@@ -7,27 +7,24 @@ final weightRepositoryProvider = Provider((ref) {
   return WeightRepository(Supabase.instance.client);
 });
 
-class WeightNotifier extends AsyncNotifier<List<WeightLog>> {
-  late WeightRepository _repo;
-  DateTime _selectedDate = DateTime.now();
+final weightDateProvider = NotifierProvider<WeightDateNotifier, DateTime>(
+  WeightDateNotifier.new,
+);
 
+class WeightDateNotifier extends Notifier<DateTime> {
+  @override
+  DateTime build() => DateTime.now();
+
+  void setDate(DateTime date) => state = date;
+}
+
+class WeightNotifier extends AsyncNotifier<List<WeightLog>> {
   @override
   Future<List<WeightLog>> build() async {
-    _repo = ref.watch(weightRepositoryProvider);
-    return _loadLogs();
+    final repo = ref.watch(weightRepositoryProvider);
+    final date = ref.watch(weightDateProvider);
+    return repo.getWeightLogs(date);
   }
-
-  Future<List<WeightLog>> _loadLogs() async {
-    return _repo.getWeightLogs(_selectedDate);
-  }
-
-  Future<void> setDate(DateTime date) async {
-    _selectedDate = date;
-    state = const AsyncValue.loading();
-    state = await AsyncValue.guard(() => _loadLogs());
-  }
-
-  DateTime get selectedDate => _selectedDate;
 
   Future<void> addLog({
     required double weight,
@@ -50,20 +47,22 @@ class WeightNotifier extends AsyncNotifier<List<WeightLog>> {
       createdAt: DateTime.now(),
     );
 
+    final repo = ref.read(weightRepositoryProvider);
     state = const AsyncValue.loading();
     state = await AsyncValue.guard(() async {
-      await _repo.addWeightLog(log);
+      await repo.addWeightLog(log);
       // Invalidate latest log provider to refresh dashboard
       ref.invalidate(latestWeightLogProvider);
-      return _loadLogs();
+      return repo.getWeightLogs(date);
     });
   }
 }
 
-final weightProvider =
-    AsyncNotifierProvider<WeightNotifier, List<WeightLog>>(() {
-      return WeightNotifier();
-    });
+final weightProvider = AsyncNotifierProvider<WeightNotifier, List<WeightLog>>(
+  () {
+    return WeightNotifier();
+  },
+);
 
 final latestWeightLogProvider = FutureProvider<WeightLog?>((ref) async {
   final repo = ref.watch(weightRepositoryProvider);
@@ -73,6 +72,6 @@ final latestWeightLogProvider = FutureProvider<WeightLog?>((ref) async {
 final recentWeightLogsProvider = FutureProvider<List<WeightLog>>((ref) async {
   final repo = ref.watch(weightRepositoryProvider);
   // Watch for changes to weightProvider to trigger refresh
-  ref.watch(weightProvider); 
+  ref.watch(weightProvider);
   return repo.getRecentWeightLogs();
 });
