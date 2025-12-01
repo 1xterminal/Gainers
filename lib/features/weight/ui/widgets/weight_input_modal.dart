@@ -250,7 +250,7 @@ class _WeightInputModalState extends State<WeightInputModal> {
                     contentPadding: EdgeInsets.zero,
                     isDense: true,
                     hintText: '0',
-                    hintStyle: TextStyle(color: hintColor.withOpacity(0.5)),
+                    hintStyle: TextStyle(color: hintColor.withValues(alpha: 0.5)),
                   ),
                   style: TextStyle(color: textColor, fontSize: 24, fontWeight: FontWeight.bold),
                   keyboardType: const TextInputType.numberWithOptions(decimal: true),

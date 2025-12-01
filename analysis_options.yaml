@@ -5,6 +5,9 @@ analyzer:
 custom_lint:
   rules:
     - riverpod_lint
+  enable_all_lint_rules: false
+  rules_to_disable:
+    - avoid_public_notifier_properties
 
 # This file configures the analyzer, which statically analyzes Dart code to
 # check for errors, warnings, and lints.

@@ -19,8 +19,7 @@ class _WeightLogScreenState extends ConsumerState<WeightLogScreen> {
   Widget build(BuildContext context) {
     final userId = Supabase.instance.client.auth.currentUser?.id;
     final profileAsync = ref.watch(getProfileProvider(userId ?? ''));
-    final weightNotifier = ref.read(weightProvider.notifier);
-    final selectedDate = weightNotifier.selectedDate;
+    final selectedDate = ref.watch(weightDateProvider);
     final weightState = ref.watch(weightProvider);
     final recentLogsAsync = ref.watch(recentWeightLogsProvider);
 
@@ -63,8 +62,9 @@ class _WeightLogScreenState extends ConsumerState<WeightLogScreen> {
                           // Date Wheel
                           HorizontalDateWheel(
                             selectedDate: selectedDate,
-                            onDateSelected: (date) =>
-                                weightNotifier.setDate(date),
+                            onDateSelected: (date) => ref
+                                .read(weightDateProvider.notifier)
+                                .setDate(date),
                           ),
                           const SizedBox(height: 24),
 

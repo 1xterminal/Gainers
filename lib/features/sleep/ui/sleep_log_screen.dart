@@ -18,7 +18,7 @@ class _SleepLogScreenState extends ConsumerState<SleepLogScreen> {
   Widget build(BuildContext context) {
     final sleepState = ref.watch(sleepProvider);
     final notifier = ref.read(sleepProvider.notifier);
-    final selectedDate = ref.watch(sleepProvider.notifier).selectedDate;
+    final selectedDate = ref.watch(sleepDateProvider);
     final weeklyLogsAsync = ref.watch(weeklySleepLogsProvider(selectedDate));
 
     final dailyLogs = sleepState.value ?? [];
@@ -52,7 +52,8 @@ class _SleepLogScreenState extends ConsumerState<SleepLogScreen> {
                   // Date Wheel
                   HorizontalDateWheel(
                     selectedDate: selectedDate,
-                    onDateSelected: (date) => notifier.setDate(date),
+                    onDateSelected: (date) =>
+                        ref.read(sleepDateProvider.notifier).setDate(date),
                   ),
                   const SizedBox(height: 24),
 
